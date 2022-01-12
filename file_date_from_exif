@@ -1,0 +1,8 @@
+if exiftran -d $i|grep -i date; then
+	img_date=`exiftran -d $i|grep -i date|head -n1`;
+	date_arr=($img_date); 
+	img_date=${date_arr[4]//:/}${date_arr[5]/:/};
+	img_date=${img_date//:/.};
+else
+	img_date=`date -r $i +%Y%m%d%H%M.%S`
+fi;

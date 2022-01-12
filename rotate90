@@ -1,0 +1,13 @@
+#!/usr/bin/bash
+
+for i in %F; 
+do 	
+	img_date=`date -r $i +%Y%0m%0d%H%M.%S`;
+	temp=/tmp/$(basename $i);
+	exiftran -2 -o $temp $i; 
+	touch -t $img_date $temp && mv $temp $i;
+done;
+
+
+#jpegtran -rotate 270 -outfile /tmp/%n %f; mv /tmp/%n %f
+

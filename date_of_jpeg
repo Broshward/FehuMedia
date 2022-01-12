@@ -1,0 +1,2 @@
+#!/usr/bin/sh
+jhead $1|grep -i date|cut -d ':' -f 2-5|cut -d ' ' -f 2-

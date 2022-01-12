@@ -1,0 +1,17 @@
+#!/usr/bin/bash
+
+# $1 - file name
+# $2 - comment string
+
+comment_str="${@:2}"
+
+img_date=`date -r $1 +%Y%0m%0d%H%M.%S`;
+
+#exiv2 -M'set Exif.Photo.UserComment '$comment_str $1
+#exiv2 -c $comment_str $1
+#ffmpeg -i $1 -c copy -metadata Comment=$comment_str out_$1
+
+/usr/bin/vendor_perl/exiftool $1 -UserComment="$comment_str"
+#/usr/bin/vendor_perl/exiftool -Comment=$comment_str $1
+
+touch -t $img_date $1

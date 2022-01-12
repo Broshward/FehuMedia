@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+
+# $1 - file name
+
+#exiv2 -pa --grep Exif.Photo.UserComment $1
+#exiv2 -pc $1
+#ffprobe -loglevel quiet -show_format $1 |grep comment # if newstring in comment only first string gets
+
+/usr/bin/vendor_perl/exiftool -UserComment $1
+#/usr/bin/vendor_perl/exiftool -Comment $1

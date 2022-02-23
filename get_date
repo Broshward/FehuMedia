@@ -1,0 +1,4 @@
+#!/usr/bin/bash
+
+/usr/bin/vendor_perl/exiftool -T -DateTimeOriginal $1
+#/usr/bin/vendor_perl/exiftool -T -createdate $1

@@ -6,7 +6,7 @@
 
 add_comment="${@:2}"
 
-comment=$($PWD/get_comment test.jpg |cut -d ":" -f 2-) || exit;
+comment=$(get_comment $1 |cut -d ":" -f 2-) || exit;
 comment_str=$comment';'$add_comment
 
 

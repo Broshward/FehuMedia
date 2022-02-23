@@ -4,7 +4,12 @@
 # $2 - comment string
 
 import sys,os
-add_comment='Text='+' '.join(sys.argv[2:])
+tags=''.join(sys.argv[2:])
+tags=tags.split(',')
+for i in range(len(tags)):
+    tags[i]='#'+tags[i]
+tags=';'.join(tags)
+
 filename=sys.argv[1]
 
 comment=os.popen("get_comment %s" % (filename)).read()
@@ -12,9 +17,9 @@ if "User Comment" in comment: # For JPEG, else for videos
     comment = comment.split(':',1)[1].strip()
 
 if comment.strip()!='':
-    comment=comment+';'+add_comment
+    comment=comment+';'+tags
 else:
-    comment=add_comment
+    comment=tags
 
 
 img_time=os.path.getmtime(filename)

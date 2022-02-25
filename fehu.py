@@ -88,21 +88,57 @@ def mount(mount_point,comments):
             exit(2)
         
         #----Create dates directories & symlinks---------
-        date=dates_dir+date.split(None,1)[0].replace(':','/')+'/'
-        if not os.path.exists(date):
-            os.makedirs(date)
-        if not os.path.exists(date+file.rsplit('/',1)[1]):
-            os.symlink(file,date+file.rsplit('/',1)[1])
+        date=date.split(None,1)[0].split(':')
+        if all_dirs==False:
+            #--- Symlink in last of date dir ---
+            date=dates_dir+'/'.join(date)+'/'
+            if not os.path.exists(date):
+                os.makedirs(date)
+            if not os.path.exists(date+file.rsplit('/',1)[1]):
+                os.symlink(file,date+file.rsplit('/',1)[1])
+        else:
+            #--- Symlink in all of date dirs ---
+            dirs=dates_dir+'/'.join(date)
+            for i in range(len(date)):
+                dir = dates_dir+'/'.join(date[:i+1])+'/'
+                if not os.path.exists(dir):
+                    os.makedirs(dir)
+                if not os.path.exists(dir+file.rsplit('/',1)[1]):
+                    os.symlink(file,dir+file.rsplit('/',1)[1])
 
         #-----Create HashTag directories and symlinks----------
         if ';' in comment:
-            for i in comment.split(';'):
-                if i.strip().startswith('#'):
-                    tag=i.strip()[1:]+'/'
-                    if not os.path.exists(mount_point+tag):
-                        os.makedirs(mount_point+tag)
-                    if not os.path.exists(mount_point+tag+file.rsplit('/',1)[1]):
-                        os.symlink(file, mount_point+tag+file.rsplit('/',1)[1])
+            comment = comment.split(';')
+            if all_dirs==False:
+                #---- Single symlink for one tag
+                for i in comment:
+                    if i.strip().startswith('#'):
+                        tag=i.strip()[1:]+'/'
+                        if not os.path.exists(mount_point+tag):
+                            os.makedirs(mount_point+tag)
+                        if not os.path.exists(mount_point+tag+file.rsplit('/',1)[1]):
+                            os.symlink(file, mount_point+tag+file.rsplit('/',1)[1])
+                #---- For many cross included tag symlinks
+            else:
+                for i in range(len(comment)):
+                    if not comment[i].startswith('#'):
+                        continue
+                    if not os.path.exists(mount_point+comment[i][1:]):
+                        os.makedirs(mount_point+comment[i][1:])
+                    if not os.path.exists(mount_point+comment[i][1:]+'/'+file.rsplit('/',1)[1]):
+                        os.symlink(file, mount_point+comment[i][1:]+'/'+file.rsplit('/',1)[1])
+                    for j in range(len(comment)):
+                        if not comment[j].startswith('#'):
+                            continue
+                        if i==j:
+                            continue
+                        if comment[i]==comment[j]:
+                            continue
+                        if not os.path.exists(mount_point+comment[i][1:]+'/'+comment[j][1:]):
+                            os.makedirs(mount_point+comment[i][1:]+'/'+comment[j][1:])
+                        if not os.path.exists(mount_point+comment[i][1:]+'/'+comment[j][1:]+'/'+file.rsplit('/',1)[1]):
+                            os.symlink(file, mount_point+comment[i][1:]+'/'+comment[j][1:]+'/'+file.rsplit('/',1)[1])
+
         else:
             if not os.path.exists(without_hash_dir+file.rsplit('/',1)[1]):
                 os.symlink(file, without_hash_dir+file.rsplit('/',1)[1])
@@ -123,6 +159,14 @@ if __name__=='__main__':
         sys.argv.remove('-c')
         create_cache()
         exit(0)
+
+    if '-a' in sys.argv:
+        sys.argv.remove('-a')
+
+        all_dirs = True
+    else:
+        all_dirs = False
+
 
     try:comments = open(cache_file,'r').read()
     except:

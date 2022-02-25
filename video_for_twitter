@@ -1,0 +1,2 @@
+#!/usr/bin/bash
+ffmpeg -i $1 -vcodec libx264 -acodec aac -pix_fmt yuv420p -y for_twi.mp4

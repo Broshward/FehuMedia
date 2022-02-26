@@ -80,10 +80,13 @@ def mount(mount_point,comments):
     without_hash_dir = mount_point + 'without_hash/'
     os.mkdir(without_hash_dir) #directory for dates of images
 
+    comments=comments.strip()
+    strnum=0
     for i in comments.split('\n'):
+        strnum += 1 # String numbering begin with first (1) not 0.
         try:file,date,comment = i.split('   ',2)
         except:
-            print "You fehu.cache file damaged!\n Try fehu.py -c"
+            print "You fehu.cache file damaged in string num <%s>!\n Try fehu.py -c" %(strnum)
             print i
             exit(2)
         
@@ -107,7 +110,7 @@ def mount(mount_point,comments):
                     os.symlink(file,dir+file.rsplit('/',1)[1])
 
         #-----Create HashTag directories and symlinks----------
-        if ';' in comment:
+        if comment != '':
             comment = comment.split(';')
             if all_dirs==False:
                 #---- Single symlink for one tag

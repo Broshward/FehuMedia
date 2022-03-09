@@ -18,4 +18,4 @@ Also you can simply copy your photos to another devices and your text and tags w
 You must only create cache there and mount fehumedia pseudo file system with fehuimg tool.
 
 *
-It is python2 scripts which depends of the "exiftool".
+It is python2 scripts which depends from the "exiftool", exiftran, ImageMagick, ffmpeg and probably jpegtran.

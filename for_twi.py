@@ -15,6 +15,7 @@ for i in sys.argv[1:]:
     if i.lower().endswith('mpg') or \
        i.lower().endswith('mp4') or \
        i.lower().endswith('mov'):
-        os.system("ffmpeg -i %s -vcodec libx264 -acodec aac -pix_fmt yuv420p -y %s.mp4" %(i,target_dir+'/'+i.rsplit('/',1)[1]))
+        #os.system("ffmpeg -i %s -vcodec libx264 -acodec aac -pix_fmt yuv420p -y %s.mp4" %(i,target_dir+'/'+i.rsplit('/',1)[1]))
+        os.system("ffmpeg -i %s -vcodec libx264 -acodec aac -pix_fmt yuv420p -y -map 0 -segment_time 130 -f segment %s_%%02d.mp4" %(i,target_dir+'/'+i.rsplit('/',1)[1]))
         
     

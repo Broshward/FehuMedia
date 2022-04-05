@@ -29,6 +29,7 @@ img_time=os.path.getmtime(filename)
 #ffmpeg -i $1 -c copy -metadata Comment=$comment_str out_$1
 cmd='/usr/bin/vendor_perl/exiftool -overwrite_original %s -UserComment=\'%s\'' %(filename,comment)
 os.system(cmd)
+#print os.popen(cmd).read()
 #/usr/bin/vendor_perl/exiftool -Comment=$comment_str $1
 
 os.utime(filename, (img_time,img_time))

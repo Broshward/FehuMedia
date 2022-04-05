@@ -17,5 +17,5 @@ You tags and texts keeps into your images and they never loses with your cache d
 Also you can simply copy your photos to another devices and your text and tags will be copied together.
 You must only create cache there and mount fehumedia pseudo file system with fehuimg tool.
 
-
-* It is python2 scripts which depends of the "exiftool".
+*
+It is python2 scripts which depends from the "exiftool", exiftran, ImageMagick, ffmpeg and probably jpegtran in the future.

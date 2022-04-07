@@ -32,13 +32,14 @@ lost,1666
 If only EndTime presets in string the BeginTime takes from EndTime previous string of 0 is string is first.
 
 Options:
-    -h                  Print this help
-    -t filename         times_rates_file name. Default is "times_rates_file" in current dir.
-    -r num              num is framerate output video. Default is 30.
-    -o filename         Output video filename. Default is out.[input_ext]. 
-                        If extentions of input and output files coincides then 
-                        it will be copy video content for ScaleFactors equal "1".
-                        Else it will be convert to other format video.
+    -h                          Print this help
+    --times-tempos filename      times_rates_file name. Default is "times_rates_file" in current dir.
+    -t num                      Change tempo of all video file to num. The num could be float.
+    -r num                      num is framerate output video. Default is 30. The num could be float.
+    -o filename                 Output video filename. Default is out.[input_ext]. 
+                                If extentions of input and output files coincides then 
+                                it will be copy video content for ScaleFactors equal "1".
+                                Else it will be convert to other format video.
 """
 
 import sys,os
@@ -54,8 +55,8 @@ if '-r' in sys.argv:
 else:
     output_rate = 30
   
-if '-t' in sys.argv:
-    r_index=sys.argv.index('-t')
+if '--times-tempos' in sys.argv:
+    r_index=sys.argv.index('--times-tempos')
     times_rates_file = sys.argv[r_index+1]
     sys.argv.pop(r_index)
     sys.argv.pop(r_index)
@@ -70,6 +71,12 @@ if '-o' in sys.argv:
 else:
     output_video = "output"
 
+if '-t' in sys.argv:
+    r_index=sys.argv.index('-t')
+    all_tempo = float(sys.argv[r_index+1]) 
+    sys.argv.pop(r_index)
+    sys.argv.pop(r_index)
+
 sys.argv.pop(0)
 
 if len(sys.argv)==0:
@@ -83,11 +90,27 @@ if not os.path.exists(input_video):
     print "Input video file not found!"
     exit(-2)
 
+# Output video filename calculate
+if '.' not in output_video:
+    output_video += '.'+input_video.rsplit('.',1)[1]
+
+# mpg bitrate setting
+if output_video.rsplit('.',1)[1] == 'mpg':
+    mpg_bitrate='-b:v 2500k'
+else:
+    mpg_bitrate=''
+
+
+#If '-t' option was given
+if 'all_tempo' in globals():
+    os.system('ffmpeg -r %f -i %s -an -r %f %s -y %s' %(all_tempo*output_rate, input_video, output_rate, mpg_bitrate, output_video))
+    exit(0)
+
+# If '-t' not given
 if not os.path.exists(times_rates_file):
     print "The %s file not found!" %(times_rates_file)
     exit(-2)
 
-import re
 times_rates=[]
 for i in open(times_rates_file).readlines():
     if i.strip() == '':
@@ -108,14 +131,6 @@ for i in open(times_rates_file).readlines():
     times_rates.append([BeginTime,EndTime,tempo])
 
 #spliting and rating video
-if '.' not in output_video:
-    output_video += '.'+input_video.rsplit('.',1)[1]
-
-if output_video.rsplit('.',1)[1] == 'mpg':
-    mpg_bitrate='-b:v 2500k'
-else:
-    mpg_bitrate=''
-
 list_file=open('list','w')
 name=0
 for i in times_rates:
@@ -128,11 +143,11 @@ for i in times_rates:
     i[0]=float(i[0])
     temp_name = '%02d.%s' %(name, output_video.rsplit('.',1)[1])
     if i[2]=='copy' and input_video.rsplit('.',1)[1] == output_video.rsplit('.',1)[1]:
-        cmd = 'ffmpeg -i %s -c copy -ss %f -t -y %s' %(input_video, i[0], temp_name)
+        cmd = 'ffmpeg -i %s -c copy -an -ss %f -t -y %s' %(input_video, i[0], temp_name)
         cmd = cmd.replace('-t','' if i[1]=='end' else '-t %f' %(float(i[1])-i[0]))
     else:
         i[2]=float(i[2])
-        cmd = 'ffmpeg -r %f -i %s -ss %f -t -r %f %s -y %s' %(output_rate*i[2], input_video, i[0]/i[2], output_rate, mpg_bitrate, temp_name)
+        cmd = 'ffmpeg -r %f -i %s -an -ss %f -t -r %f %s -y %s' %(output_rate*i[2], input_video, i[0]/i[2], output_rate, mpg_bitrate, temp_name)
         cmd = cmd.replace('-t','' if i[1]=='end' else '-t %f' %((float(i[1])-i[0])/i[2]))
 
     list_file.write('file \'%s\'\n' %(temp_name))

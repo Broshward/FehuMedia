@@ -28,7 +28,7 @@ Options:
 """
 
 
-import os, sys, time
+import os, sys, subprocess
 home=os.path.expanduser("~")
 cache_file=cache_file.replace('~',home)
 dirs_file=dirs_file.replace('~',home)
@@ -90,7 +90,13 @@ def create_cache():
 
     cache_file.close()
 
+def symlink_time_change(timestamp,symlink):
+    subprocess.call(['touch', '-h', '-t', timestamp, symlink])
+    #os.system('touch -h -r "'+file+'" '+ symlink) # %s" %(file,symlink))
+    #os.system('touch -h -t %s "%s"' %(filetime,symlink))
+
 def mount(mount_point,comments):
+    import datetime,time
     if not mount_point.endswith('/'):
         mount_point += '/'
     try:os.mkdir(mount_point)
@@ -115,6 +121,9 @@ def mount(mount_point,comments):
             print i
             exit(2)
         
+        if not os.path.exists(file):
+            continue
+
         if 'size' in globals().keys():
             size=globals()['size']
             filesize = os.path.getsize(file)
@@ -129,6 +138,9 @@ def mount(mount_point,comments):
                 if filesize/size[1] != size[0]:
                     continue
 
+        timestamp = date.replace(':','',3).replace(' ','').replace(':','.')
+        #filetime = time.mktime(datetime.datetime.strptime(date, "%Y:%m:%d %H:%M:%S").timetuple())
+
         #----Create dates directories & symlinks---------
         date=date.split(None,1)[0].split(':')
         if all_dirs==False:
@@ -136,8 +148,10 @@ def mount(mount_point,comments):
             date=dates_dir+'/'.join(date)+'/'
             if not os.path.exists(date):
                 os.makedirs(date)
-            if not os.path.exists(date+file.rsplit('/',1)[1]):
-                os.symlink(file,date+file.rsplit('/',1)[1])
+            symlink = date+file.rsplit('/',1)[1]
+            if not os.path.exists(symlink):
+                os.symlink(file,symlink)
+                symlink_time_change(filetime,symlink)
         else:
             #--- Symlink in all of date dirs ---
             dirs=dates_dir+'/'.join(date)
@@ -145,8 +159,10 @@ def mount(mount_point,comments):
                 dir = dates_dir+'/'.join(date[:i+1])+'/'
                 if not os.path.exists(dir):
                     os.makedirs(dir)
-                if not os.path.exists(dir+file.rsplit('/',1)[1]):
-                    os.symlink(file,dir+file.rsplit('/',1)[1])
+                symlink = dir+file.rsplit('/',1)[1]
+                if not os.path.exists(symlink):
+                    os.symlink(file,symlink)
+                    symlink_time_change(filetime,symlink)
 
         #-----Create HashTag directories and symlinks----------
         if comment != '':
@@ -158,8 +174,10 @@ def mount(mount_point,comments):
                         tag=i.strip()[1:]+'/'
                         if not os.path.exists(mount_point+tag):
                             os.makedirs(mount_point+tag)
-                        if not os.path.exists(mount_point+tag+file.rsplit('/',1)[1]):
-                            os.symlink(file, mount_point+tag+file.rsplit('/',1)[1])
+                        symlink = mount_point+tag+file.rsplit('/',1)[1]
+                        if not os.path.exists(symlink):
+                            os.symlink(file, symlink)
+                            symlink_time_change(filetime,symlink)
                 #---- For many cross included tag symlinks
             else:
                 for i in range(len(comment)):
@@ -167,8 +185,10 @@ def mount(mount_point,comments):
                         continue
                     if not os.path.exists(mount_point+comment[i][1:]):
                         os.makedirs(mount_point+comment[i][1:])
-                    if not os.path.exists(mount_point+comment[i][1:]+'/'+file.rsplit('/',1)[1]):
-                        os.symlink(file, mount_point+comment[i][1:]+'/'+file.rsplit('/',1)[1])
+                    symlink = mount_point+comment[i][1:]+'/'+file.rsplit('/',1)[1]
+                    if not os.path.exists(symlink):
+                        os.symlink(file, symlink)
+                        symlink_time_change(filetime,symlink)
                     for j in range(len(comment)):
                         if not comment[j].startswith('#'):
                             continue
@@ -178,12 +198,16 @@ def mount(mount_point,comments):
                             continue
                         if not os.path.exists(mount_point+comment[i][1:]+'/'+comment[j][1:]):
                             os.makedirs(mount_point+comment[i][1:]+'/'+comment[j][1:])
-                        if not os.path.exists(mount_point+comment[i][1:]+'/'+comment[j][1:]+'/'+file.rsplit('/',1)[1]):
-                            os.symlink(file, mount_point+comment[i][1:]+'/'+comment[j][1:]+'/'+file.rsplit('/',1)[1])
+                        symlink = mount_point+comment[i][1:]+'/'+comment[j][1:]+'/'+file.rsplit('/',1)[1]
+                        if not os.path.exists(symlink):
+                            os.symlink(file, symlink)
+                            symlink_time_change(filetime,symlink)
 
         else:
-            if not os.path.exists(without_hash_dir+file.rsplit('/',1)[1]):
-                os.symlink(file, without_hash_dir+file.rsplit('/',1)[1])
+            symlink = without_hash_dir+file.rsplit('/',1)[1]
+            if not os.path.exists(symlink):
+                os.symlink(file, symlink)
+                symlink_time_change(filetime,symlink)
     
 
 if __name__=='__main__':

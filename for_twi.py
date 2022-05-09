@@ -5,6 +5,7 @@ import os, sys
 
 home=os.path.expanduser("~")
 target_dir = home + '/twi'
+image_size=1024
 
 if not os.path.exists(target_dir):
     os.mkdir(target_dir)
@@ -12,7 +13,7 @@ if not os.path.exists(target_dir):
 for i in sys.argv[1:]:
     i=os.path.abspath(i)
     if i.lower().endswith('jpg') or i.lower().endswith('png'): 
-        os.system("resize1024 %s %s" %(i,target_dir+'/'+i.rsplit('/',1)[1]))
+        os.system("magick %s -resize '%dx%d^' %s" %(i,image_size,image_size,target_dir+'/'+i.rsplit('/',1)[1]))
     elif i.lower().endswith('mpg') or \
        i.lower().endswith('mp4') or \
        i.lower().endswith('mov'):

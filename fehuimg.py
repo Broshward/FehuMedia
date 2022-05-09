@@ -1,20 +1,22 @@
 #!/usr/bin/python2
 #coding:utf8
 
-cache_file='~/.fehumedia/fehu.cache'
-dirs_file='~/.fehumedia/fehu.dirs'
-conf_file='~/.fehumedia/fehu.conf'
+fehu_home = '~/.fehumedia'
 
 help= """ 
 Usage: 
-    $ fehuimg.py [-c][-q] [-h] [pattern] [-m] [ /mount/point/ ]
+    $ fehuimg.py [-c] [-cn] [-q] [-r file1 file2 ... fileN] [-h] [pattern] [-m] [ /mount/point/ ] [--size size]
 
 Options:
 
-    -c  Create cache of media directories.
-        This create cache of comments of media files, located in media directories, which enumerates in fehu.dirs and writes it to fehu.cache.
+    -c          Create cache of media directories.
+                This create cache of comments of media files, located in media directories, which enumerates in fehu.dirs and writes it to fehu.cache.
     
-    -q  Do not write to stdout.
+    -q          Do not write to stdout.
+
+    -cn         Create new. It is likewise -c option, but if file is present in cache, it ignoring one.
+
+    -r filename Replace cache record for filename file with new values.
 
     -m Mount fehumedia filesystem. The /mount/point must be after "-m" option or in fehu.conf file as mount variable/. Else default mount point (/tmp/fehumedia) will be selected.
 
@@ -30,17 +32,56 @@ Options:
 
 import os, sys, subprocess
 home=os.path.expanduser("~")
-cache_file=cache_file.replace('~',home)
-dirs_file=dirs_file.replace('~',home)
-conf_file=conf_file.replace('~',home)
+fehu_home=fehu_home.replace('~',home)
+cache_file= fehu_home + '/fehu.cache'
+dirs_file = fehu_home + '/fehu.dirs'
+conf_file = fehu_home + '/fehu.conf'
 
-def create_cache():
+if os.path.exists(fehu_home):
+    if not os.path.isdir(fehu_home):
+        print 'Cannot create %s. File exists!' %(fehu_home)
+        exit(-1)
+else:
+    os.mkdir(fehu_home)
+
+def gen_cache_string(filepath):
+    comment = os.popen('get_comment %s' %(filepath)).read()
+    if comment!='':
+        comment = comment.split(':',1)[1].strip()
+    #if comment=='':
+    #    continue
+    date = os.popen('get_date %s' %(filepath)).read().strip()
+    if date=='-':
+        date = os.popen('date_of_file %s' %(filepath)).read().strip()
+    
+    return filepath+'\t'+date+'\t'+comment+'\n'
+
+
+def replace_cache(files):
+    global cache_file
+    cache = open(cache_file,'r').read()
+    for filepath in files:
+        if not os.path.exists(filepath):
+            print 'File %s not exists!' %(filepath)
+        if filepath+'\t' in cache:
+            file_cache = cache[cache.find(filepath+'\t'):].split('\n',1)[0] + '\n'
+            cache = cache.replace(file_cache, gen_cache_string(filepath))
+        else:
+            cache += gen_cache_string(filepath)
+    cache_file = open(cache_file,'w')
+    cache_file.write(cache)
+    cache_file.close()
+
+
+def create_cache(New=False):
     global cache_file, dirs_file
-    try:cache_file = open(cache_file,'w')
-    except:
-        try:os.mkdir(cache_file.rsplit('/',1)[0])
-        except:None
+    
+    if New == True:
+        cache_file = open(cache_file,'r+')
+        cache = cache_file.read()
+    else:
         cache_file = open(cache_file,'w')
+
     try:
         dirs=open(dirs_file,'r').read()
     except:
@@ -73,16 +114,12 @@ def create_cache():
                     dirs.append(filepath+'/*')
                     print filepath + ' is appended to dirs'
                 continue 
-            comment = os.popen('get_comment %s' %(filepath)).read()
-            if comment!='':
-                comment = comment.split(':',1)[1].strip()
-            #if comment=='':
-            #    continue
-            date = os.popen('get_date %s' %(filepath)).read().strip()
-            if date=='-':
-                date = os.popen('date_of_file %s' %(filepath)).read().strip()
-            
-            stringout = filepath+'\t'+date+'\t'+comment+'\n'
+
+            if New == True:
+                if filepath+'\t' in cache:
+                    continue
+
+            stringout = gen_cache_string(filepath)
             if output == True:
                 print stringout
             cache_file.write(stringout)
@@ -151,7 +188,7 @@ def mount(mount_point,comments):
             symlink = date+file.rsplit('/',1)[1]
             if not os.path.exists(symlink):
                 os.symlink(file,symlink)
-                symlink_time_change(filetime,symlink)
+                symlink_time_change(timestamp,symlink)
         else:
             #--- Symlink in all of date dirs ---
             dirs=dates_dir+'/'.join(date)
@@ -162,7 +199,7 @@ def mount(mount_point,comments):
                 symlink = dir+file.rsplit('/',1)[1]
                 if not os.path.exists(symlink):
                     os.symlink(file,symlink)
-                    symlink_time_change(filetime,symlink)
+                    symlink_time_change(timestamp,symlink)
 
         #-----Create HashTag directories and symlinks----------
         if comment != '':
@@ -177,7 +214,7 @@ def mount(mount_point,comments):
                         symlink = mount_point+tag+file.rsplit('/',1)[1]
                         if not os.path.exists(symlink):
                             os.symlink(file, symlink)
-                            symlink_time_change(filetime,symlink)
+                            symlink_time_change(timestamp,symlink)
                 #---- For many cross included tag symlinks
             else:
                 for i in range(len(comment)):
@@ -188,7 +225,7 @@ def mount(mount_point,comments):
                     symlink = mount_point+comment[i][1:]+'/'+file.rsplit('/',1)[1]
                     if not os.path.exists(symlink):
                         os.symlink(file, symlink)
-                        symlink_time_change(filetime,symlink)
+                        symlink_time_change(timestamp,symlink)
                     for j in range(len(comment)):
                         if not comment[j].startswith('#'):
                             continue
@@ -201,13 +238,13 @@ def mount(mount_point,comments):
                         symlink = mount_point+comment[i][1:]+'/'+comment[j][1:]+'/'+file.rsplit('/',1)[1]
                         if not os.path.exists(symlink):
                             os.symlink(file, symlink)
-                            symlink_time_change(filetime,symlink)
+                            symlink_time_change(timestamp,symlink)
 
         else:
             symlink = without_hash_dir+file.rsplit('/',1)[1]
             if not os.path.exists(symlink):
                 os.symlink(file, symlink)
-                symlink_time_change(filetime,symlink)
+                symlink_time_change(timestamp,symlink)
     
 
 if __name__=='__main__':
@@ -221,15 +258,19 @@ if __name__=='__main__':
     else:
         output = True
 
-#    if '-r' in sys.argv:
-#        sys.argv.remove('-r')
-#        recursive = True
-#    else:
-#        recursive = False
+    if '-r' in sys.argv:
+        i = sys.argv.index('-r')
+        replace_cache(sys.argv[i+1:])
+        exit(0)
          
     if '-c' in sys.argv:
         sys.argv.remove('-c')
         create_cache()
+        exit(0)
+
+    if '-cn' in sys.argv:
+        sys.argv.remove('-cn')
+        create_cache(True)
         exit(0)
 
     if '-a' in sys.argv:

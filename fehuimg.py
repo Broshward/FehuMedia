@@ -329,7 +329,7 @@ if __name__=='__main__':
     try:
         pattern=sys.argv[1]
     except:
-        print 'Enter search pattern, please or use another option. Read the help ;)'
+        exit(0)
     
     for i in comments.split('\n'):
         if pattern in i:

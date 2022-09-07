@@ -2,7 +2,7 @@
 
 help="""
 Usage:
-    $ video_tempo.py [ -t times_rates_file ] [ -r 30 ] video_file.mpg
+    $ video_tempo.py [-t FLOAT] [ --tempos-file times_rates_file ] [ -r FLOAT ] video_file.mpg
 
 This program splits video to parts describes in times_rates_file, then convert its with framerates accordingly with times_rates_file info.
 
@@ -33,7 +33,7 @@ If only EndTime presets in string the BeginTime takes from EndTime previous stri
 
 Options:
     -h                          Print this help
-    --times-tempos filename      times_rates_file name. Default is "times_rates_file" in current dir.
+    --tempos-file filename      times_rates_file name. Default is "times_rates_file" in current dir.
     -t num                      Change tempo of all video file to num. The num could be float.
     -r num                      num is framerate output video. Default is 30. The num could be float.
     -o filename                 Output video filename. Default is out.[input_ext]. 

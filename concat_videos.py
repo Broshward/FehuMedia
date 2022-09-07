@@ -4,7 +4,9 @@
 import sys,os
 list_files=open('list_files','wt')
 time=0
-for i in sys.argv[1:]:
+list_names=sys.argv[1:]
+list_names.sort()
+for i in list_names:
     if time==0:
         time=os.path.getmtime(i)
     if os.path.exists(i):

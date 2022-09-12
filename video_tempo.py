@@ -90,6 +90,8 @@ if not os.path.exists(input_video):
     print "Input video file not found!"
     exit(-2)
 
+outvideo_time=os.path.getmtime(input_video)
+
 # Output video filename calculate
 if '.' not in output_video:
     output_video += '.'+input_video.rsplit('.',1)[1]
@@ -159,6 +161,8 @@ list_file.close()
 cmd='ffmpeg -f concat -i list -safe 0 -c copy %s' %(output_video)
 print cmd
 os.system(cmd)
+
+os.utime(outvideo, (outvideo_time,outvideo_time))
 
 #Remove temporarily files
 for i in open('list').readlines():

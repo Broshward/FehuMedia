@@ -10,6 +10,7 @@ usage: image_for_video.py [ file1 file2 ... fileN ] [ dir1 dir2 ... dirN ]
 '''
 temporarydir='/tmp/temp'
 framerate_default = 10
+resolution = '-1:1080'
 
 if os.path.exists(temporarydir):
     if not os.path.isdir(temporarydir):
@@ -66,7 +67,7 @@ if framerate=='':
 #    exit(-1)
 
 outvideo_time=os.path.getmtime(files[0])
-cmd="ffmpeg -r %s -pattern_type glob  -i '%s/*.jpg' -vf scale=-1:720 /tmp/%s" %(framerate,temporarydir,outvideo.rsplit('/',1)[1])
+cmd="ffmpeg -r %s -pattern_type glob  -i '%s/*.jpg' -vf scale=%s /tmp/%s" %(framerate,temporarydir,resolution,outvideo.rsplit('/',1)[1])
 print cmd
 os.system(cmd)
 os.system('mv %s %s' %('/tmp/'+outvideo.rsplit('/',1)[1],outvideo))

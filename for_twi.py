@@ -5,7 +5,7 @@ import os, sys
 
 home=os.path.expanduser("~")
 target_dir = home + '/twi'
-image_size=1024
+image_size=1280
 
 if not os.path.exists(target_dir):
     os.mkdir(target_dir)

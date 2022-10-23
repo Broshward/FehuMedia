@@ -11,6 +11,8 @@ usage: image_for_video.py [ file1 file2 ... fileN ] [ dir1 dir2 ... dirN ]
 temporarydir='/tmp/temp'
 framerate_default = 10
 resolution = '-1:1080'
+resolution = '1920:-1'
+resolution = '-1:2160'
 
 if os.path.exists(temporarydir):
     if not os.path.isdir(temporarydir):

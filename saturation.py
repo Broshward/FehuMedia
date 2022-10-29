@@ -17,7 +17,7 @@ else:
 
 files = sys.argv[1:]
 
-print 'Please insert new video saturation in percentage/100 (1=100%, 2=200% and etc) [2]: ',
+print 'Please insert new saturation in percentage/100 (1=100%, 2=200% and etc) [2]: ',
 ans = sys.stdin.readline().strip()
 if ans=='':
     saturation=2
@@ -27,7 +27,7 @@ else:
         print "saturation must be float"
         exit(1)
 
-print 'Replace video file? (N or additions for create a copy) [Y/n]:'
+print 'Replace input file(s)? (N or additions for create a copy) [Y/n]:'
 ans = sys.stdin.readline().strip()
 
 for i in files:
@@ -42,10 +42,13 @@ for i in files:
         outvideo=i.rsplit('/',1)[1].rsplit('.',1)
         outvideo = i.rsplit('/',1)[0]+'/'+outvideo[0]+ans+outvideo[1]
 
-    if show:
-        cmd="ffplay -fs -vf eq=saturation=%f %s" %(saturation,i)
-    else:
-        cmd="ffmpeg -i %s -vf eq=saturation=%f %s" %(i,saturation,outvideo)
+    if outvideo.rsplit('.',)[1].lower() in 'jpg,jpe,png,tiff,jpeg,bmp': #for images
+        cmd = "convert %s -modulate 100,%d %s" %(i,saturation*100,outvideo)
+    else: # for video
+        if show:
+            cmd="ffplay -fs -vf eq=saturation=%f %s" %(saturation,i)
+        else:
+            cmd="ffmpeg -i %s -vf eq=saturation=%f %s" %(i,saturation,outvideo)
     print cmd
     if os.system(cmd) != 0:
         exit(-1)
@@ -53,7 +56,7 @@ for i in files:
     os.utime(outvideo, (outvideo_time,outvideo_time))
 
     if not show:
-        if ans=='y' or ans=='Y' or anw=='':
+        if ans=='y' or ans=='Y' or ans=='':
             cmd = 'mv %s %s' %(outvideo,i) 
             print cmd
             os.system(cmd)

@@ -27,12 +27,12 @@ else:
         print "saturation must be float"
         exit(1)
 
-print 'Replace input file(s)? (N or additions for create a copy) [Y/n]:'
+print 'Replace input file(s)? (N or additions for create a copy) [Y/n]: ',
 ans = sys.stdin.readline().strip()
 
 for i in files:
     outvideo_time=os.path.getmtime(i)
-    if ans=='' or ans in 'yYNn':
+    if ans=='' or (ans in 'yYNn'):
         outvideo=i.rsplit('/',1)[1].rsplit('.',1)
         num=1
         while os.path.exists(i.rsplit('/',1)[0]+'/'+outvideo[0]+'_%d.%s' %(num,outvideo[1])):
@@ -41,7 +41,6 @@ for i in files:
     else:
         outvideo=i.rsplit('/',1)[1].rsplit('.',1)
         outvideo = i.rsplit('/',1)[0]+'/'+outvideo[0]+ans+outvideo[1]
-
     if outvideo.rsplit('.',)[1].lower() in 'jpg,jpe,png,tiff,jpeg,bmp': #for images
         cmd = "convert %s -modulate 100,%d %s" %(i,saturation*100,outvideo)
     else: # for video

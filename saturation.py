@@ -8,6 +8,7 @@ import sys,os,time
 
 usage='''
     usage: saturation.py [--show] path/to/video/files
+        --show  for show without file save
 '''
 if '--show' in sys.argv:
     sys.argv.remove('--show')
@@ -28,8 +29,9 @@ else:
         print "saturation must be float"
         exit(1)
 
-print 'Replace input file(s)? (N or additions for create a copy) [Y/n]: ',
-ans = sys.stdin.readline().strip()
+if not show:
+    print 'Replace input file(s)? (N or additions for create a copy) [Y/n]: ',
+    ans = sys.stdin.readline().strip()
 
 for i in files:
     outvideo_time=os.path.getmtime(i)

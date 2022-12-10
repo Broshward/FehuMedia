@@ -160,11 +160,28 @@ for i in times_rates:
     i[0]=float(i[0])
     temp_name = '%02d.%s' %(name, output_video.rsplit('.',1)[1])
     if i[2]=='copy' and input_video.rsplit('.',1)[1] == output_video.rsplit('.',1)[1]:
-        cmd = 'ffmpeg -i %s -c copy -an -ss %f -t -y %s' %(input_video, i[0], temp_name)
+        cmd = 'ffmpeg -i %s -c copy -ss %f -t -y %s' %(input_video, i[0], temp_name)
         cmd = cmd.replace('-t','' if i[1]=='end' else '-t %f' %(float(i[1])-i[0]))
     else:
         i[2]=float(i[2])
-        cmd = 'ffmpeg -r %f -i %s -an -ss %f -t -r %f %s %s -y %s' %(input_rate*i[2], input_video, i[0]/i[2], input_rate, output_rate, mpg_bitrate, temp_name)
+        #Audio tempo change
+        if i[2] != 1:
+            audio_tempo = '-af '
+            atemp=i[2]
+            while atemp<0.5:
+                audio_tempo += 'atempo=0.5,'
+                atemp*=2
+            while atemp>2:
+                audio_tempo += 'atempo=2,'
+                atemp/=2
+            if atemp == 1:
+                audio_tempo = audio_tempo[:-1] 
+            else:
+                audio_tempo += 'atempo=%f' %(atemp)
+        else:
+            audio_tempo = ''
+        
+        cmd = 'ffmpeg -r %f -i %s %s -ss %f -t -r %f %s %s -y %s' %(input_rate*i[2], input_video, audio_tempo, i[0]/i[2], input_rate, output_rate, mpg_bitrate, temp_name)
         cmd = cmd.replace('-t','' if i[1]=='end' else '-t %f' %((float(i[1])-i[0])/i[2]))
 
     list_file.write('file \'%s\'\n' %(temp_name))

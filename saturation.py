@@ -17,10 +17,11 @@ else:
 
 files = sys.argv[1:]
 
-print 'Please insert new saturation in percentage/100 (1=100%, 2=200% and etc) [2]: ',
+saturation=1.5
+print 'Please insert new saturation in percentage/100 (1=100%, 2=200% and etc) [', saturation, ']: ',
 ans = sys.stdin.readline().strip()
 if ans=='':
-    saturation=2
+    None
 else:
     try:saturation=float(ans)
     except:

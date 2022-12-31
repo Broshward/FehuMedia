@@ -43,7 +43,9 @@ for i in files:
         outvideo = i.rsplit('/',1)[0]+'/'+outvideo[0]+'_%d.%s' %(num,outvideo[1])
     else:
         outvideo=i.rsplit('/',1)[1].rsplit('.',1)
-        outvideo = i.rsplit('/',1)[0]+'/'+outvideo[0]+ans+outvideo[1]
+        outvideo = i.rsplit('/',1)[0]+'/'+outvideo[0]+ans+'.'+outvideo[1]
+
+    #import pdb;pdb.set_trace()
     if outvideo.rsplit('.',)[1].lower() in 'jpg,jpe,png,tiff,jpeg,bmp': #for images
         cmd = "convert %s -modulate 100,%d %s" %(i,saturation*100,outvideo)
     else: # for video

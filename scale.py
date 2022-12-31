@@ -35,7 +35,7 @@ else:
     show = False
 
 if '--resolution' in sys.argv:
-    framerate = float(sys.argv[sys.argv.index('--resolution')+1])
+    resolution = sys.argv[sys.argv.index('--resolution')+1]
     sys.argv.pop(sys.argv.index('--resolution')+1)
     sys.argv.pop(sys.argv.index('--resolution'))
 

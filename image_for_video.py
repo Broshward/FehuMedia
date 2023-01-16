@@ -122,9 +122,9 @@ while i < len(files):
             except:print symlink_name
         i+=1
 
-#audio_in = '-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100'
-#audio_in = '-f alsa -i default'
-audio_in = '-f pulse -i alsa_output.usb-GeneralPlus_USB_Audio_Device-00.analog-stereo'
+#audio_in = '-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100'      #For silent audio
+#audio_in = '-f alsa -i default'                                                #For alsa as audio source
+audio_in = '-f pulse -i alsa_output.usb-GeneralPlus_USB_Audio_Device-00.analog-stereo'  #For pulseaudio(pipewire) as audio source
 audio_out= '-c:a aac -shortest'
 
 if date_split:

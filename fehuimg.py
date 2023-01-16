@@ -5,7 +5,7 @@ fehu_home = '~/.fehumedia'
 
 help= """ 
 Usage: 
-    $ fehuimg.py [-c] [-cn] [-q] [-r file1 file2 ... fileN] [-h] [pattern] [-m] [ /mount/point/ ] [--size size]
+    $ fehuimg.py [[-c] [-cn] [-q] [-r file1 file2 ... fileN] [-h] [-a] [-m] [ /mount/point/ ] [--size size]] [search pattern] 
 
 Options:
 
@@ -19,6 +19,7 @@ Options:
     -r filename Replace cache record for filename file with new values.
 
     -m Mount fehumedia filesystem. The /mount/point must be after "-m" option or in fehu.conf file as mount variable/. Else default mount point (/tmp/fehumedia) will be selected.
+    -a All_dirs. Mount all directories recursively.
 
     --size size This option for -m mount command. The size argument allows prefer idenifier as '>' '<' and '=' and 'M', 'k' suffix.
                 Example: 

@@ -35,14 +35,13 @@ if not show:
 
 for i in files:
     outvideo_time=os.path.getmtime(i)
+    outvideo=i.rsplit('/',1)[1].rsplit('.',1)
     if ans=='' or (ans in 'yYNn'):
-        outvideo=i.rsplit('/',1)[1].rsplit('.',1)
         num=1
         while os.path.exists(i.rsplit('/',1)[0]+'/'+outvideo[0]+'_%d.%s' %(num,outvideo[1])):
             num+=1
         outvideo = i.rsplit('/',1)[0]+'/'+outvideo[0]+'_%d.%s' %(num,outvideo[1])
     else:
-        outvideo=i.rsplit('/',1)[1].rsplit('.',1)
         outvideo = i.rsplit('/',1)[0]+'/'+outvideo[0]+ans+'.'+outvideo[1]
 
     #import pdb;pdb.set_trace()

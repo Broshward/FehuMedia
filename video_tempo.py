@@ -103,9 +103,11 @@ print input_rate
 
 outvideo_time=os.path.getmtime(input_video)
 
+#import pdb; pdb.set_trace()
 # Output video filename calculate
 if 'output_video' not in globals():
     output_video = input_video.rsplit('.',1)[0]+'_tempo' #Default output filename
+    output_video += '.'+input_video.rsplit('.',1)[1]
 if '.' not in output_video:
     output_video += '.'+input_video.rsplit('.',1)[1]
 

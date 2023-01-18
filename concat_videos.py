@@ -9,7 +9,7 @@ else:
     copy = ''
 #list_files=open('list_files','wt')
 list_names=sys.argv[1:]
-list_names.sort()
+#list_names.sort()
 
 # Output video filename calculate
 if 'output_video' not in globals():

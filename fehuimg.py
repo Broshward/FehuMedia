@@ -165,7 +165,6 @@ def mount(mount_point,comments):
         if 'size' in globals().keys():
             size=globals()['size']
             filesize = os.path.getsize(file)
-            #import pdb; pdb.set_trace()
             if size[2] == '>':
                 if filesize < size[0]*size[1]:
                     continue
@@ -192,15 +191,26 @@ def mount(mount_point,comments):
                 symlink_time_change(timestamp,symlink)
         else:
             #--- Symlink in all of date dirs ---
+            #import pdb; pdb.set_trace()
             dirs=dates_dir+'/'.join(date)
             for i in range(len(date)):
                 dir = dates_dir+'/'.join(date[:i+1])+'/'
                 if not os.path.exists(dir):
                     os.makedirs(dir)
                 symlink = dir+file.rsplit('/',1)[1]
-                if not os.path.exists(symlink):
-                    os.symlink(file,symlink)
-                    symlink_time_change(timestamp,symlink)
+                if os.path.exists(symlink):
+                    num=1
+                    if '.' in symlink.rsplit('/',1)[1]:
+                        symlink_end = '_%d.'+symlink.rsplit('.',1)[1]
+                    else:
+                        symlink_end = '_%d' 
+                    while os.path.exists(symlink.rsplit('.',1)[0]+symlink_end %(num)):
+                        num+=1
+                    symlink = symlink.rsplit('.',1)[0] + symlink_end %(num)
+
+                            #import pdb; pdb.set_trace()
+                os.symlink(file,symlink)
+                symlink_time_change(timestamp,symlink)
 
         #-----Create HashTag directories and symlinks----------
         if comment != '':

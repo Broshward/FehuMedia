@@ -2,19 +2,29 @@
 #coding:utf8
 
 import sys,os
-if '--copy' in sys.argv:
-    sys.argv.remove('--copy')
-    copy = '-c copy'
+if '--sort-time' in sys.argv:
+    sys.argv.remove('--sort-time')
+    sort = 'time'
 else:
-    copy = ''
+    sort = ''
+
 #list_files=open('list_files','wt')
 list_names=sys.argv[1:]
-#list_names.sort()
+
+#import pdb;pdb.set_trace()
+if sort=='time':
+    times = []
+    for i in list_names:
+        times.append([os.path.getmtime(i),i])
+    times.sort()
+    for i in range(len(times)):
+        list_names[i]=times[i][1]
+
+time = os.path.getmtime(list_names[-1])
 
 # Output video filename calculate
 if 'output_video' not in globals():
     output_video = list_names[0].rsplit('.',1)[0]+'_concat.'+list_names[0].rsplit('.',1)[1] #Default output filename
-time=os.path.getmtime(list_names[0])
 
 concat_str='concat:'
 for i in list_names:
@@ -35,9 +45,5 @@ for i in list_names:
     cmd = 'rm %s' %(i+'.ts')
     os.system(cmd)
 
-# list_files.write("file '%s'\n" %(i))
-#list_files.close()
-#os.system('ffmpeg -f concat -safe 0 -i list_files %s -y %s' %(copy,output_video))
-#os.remove('list_files')
 os.utime(output_video, (time,time))
 

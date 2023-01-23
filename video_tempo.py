@@ -153,7 +153,7 @@ for i in open(times_rates_file).readlines():
     times_rates.append([BeginTime,EndTime,tempo])
 
 #spliting and rating video
-list_file=open('list','w')
+list_filenames=''
 name=0
 for i in times_rates:
     print i
@@ -186,23 +186,19 @@ for i in times_rates:
         cmd = 'ffmpeg -r %f -i %s %s -ss %f -t -r %f %s %s -y %s' %(input_rate*i[2], input_video, audio_tempo, i[0]/i[2], input_rate, output_rate, mpg_bitrate, temp_name)
         cmd = cmd.replace('-t','' if i[1]=='end' else '-t %f' %((float(i[1])-i[0])/i[2]))
 
-    list_file.write('file \'%s\'\n' %(temp_name))
+    list_filenames+=temp_name+' '
     name += 1
     print cmd
     os.system(cmd)
-list_file.close()
 #Concatenate parts from temporarily files to output 
-cmd='ffmpeg -f concat -i list -safe 0 -c copy %s' %(output_video)
+cmd='concat_videos.py %s' %(list_filenames)
 print cmd
 if os.system(cmd)!=0:
     exit(-127)
 
+os.system('mv 00_concat.%s %s' %(output_video.rsplit('.',1)[1],output_video))
 os.utime(output_video, (outvideo_time,outvideo_time))
 
 #Remove temporarily files
-for i in open('list').readlines():
-    os.system(i.replace('file', 'rm'))
+os.system('rm %s' %(list_filenames))
   
-#Remove list file
-os.system('rm list')
-

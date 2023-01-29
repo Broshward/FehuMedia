@@ -14,6 +14,7 @@ def get_photo():
     give = give.close()
     if give: return give
     out=out.split('Saving file as ',1)[1].split(None,1)[0]
+    print 'File name is ',out
     return os.system('rotate-90.py %s' %(out))
     
     #import pdb;pdb.set_trace()
@@ -25,15 +26,17 @@ if '-I' in sys.argv:
     sys.argv.pop(i)
     num=1
     while True:
+        cur=time.time()
         if get_photo():
-            break
+            print 'Error connect camera!'
         num+=1
-        print '\n\nNext photo number = ',num
-        for i in range(interval-1,0,-1):
-            print '\r',i,
+        print '\nNext photo number = ',num
+        i=interval-(time.time()-cur)
+        time.sleep(i-int(i))
+        while i > 0:
+            print int(i),'\r',
             sys.stdout.flush()
             time.sleep(1)
-        print
 else:
     get_photo()
 

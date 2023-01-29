@@ -5,11 +5,14 @@ import sys,os,time
 usage='''
 usage: image_for_video.py [ file1 file2 ... fileN ] [ dir1 dir2 ... dirN ]
     
-    This program create the "temp" directory in /tmp/ and put to this symlinks points to input files. Symlinks renames accordingly date of files. For example oldest file from input content will be "0000" name.
+    This program create the "temp" directory in /tmp/ and put to this symlinks points to input files. Symlinks renames accordingly date of files. 
     It's nessesary for ffmpeg input files regular expression.
 
-    --split-date    This option doing many files each from his date
-    --slideshow     This option doing many duplicate frame(s)
+    --split-date                This option doing many files each from his date
+    --slideshow                 This option doing many duplicate frame(s)
+    --resolution Width:Height   Output resolution for video
+    --duration dur,pause        Duration of frame and pause for crossing images (for SlideShow only)
+    -o filename     Output video filename
 '''
 temporarydir='/tmp/temp'
 framerate_default = 10
@@ -63,6 +66,15 @@ if '--slideshow' in sys.argv:
 else: 
     slideshow=False
 
+if '--duration' in sys.argv:
+    duration = sys.argv[sys.argv.index('--duration')+1]
+    sys.argv.pop(sys.argv.index('--duration')+1)
+    sys.argv.pop(sys.argv.index('--duration'))
+
+if '-o' in sys.argv:
+    outvideo = sys.argv[sys.argv.index('-o')+1]
+    sys.argv.pop(sys.argv.index('-o')+1)
+    sys.argv.pop(sys.argv.index('-o'))
 
 if '--split-date' in sys.argv:
     sys.argv.remove('--split-date')
@@ -70,18 +82,23 @@ if '--split-date' in sys.argv:
 else: 
     date_split=False
 
+if len(sys.argv)==1:
+    print '\nEmpty input files list !!!\n' 
+    exit(-4)
 files = sys.argv[1:]
 
+#import pdb;pdb.set_trace()
 if slideshow:
-    print "Insert picture duration and interval in seconds [%s]: " %(duration_pause_def),
-    duration=sys.stdin.readline().strip()   
+    if 'duration' not in globals():
+        print "Insert picture duration and interval in seconds [%s]: " %(duration_pause_def),
+        duration=sys.stdin.readline().strip()   
     if duration == '':
         duration,pause = duration_pause_def.split(',')
     else:
         duration,pause = duration.split(',')
     duration=float(duration)
     pause=float(pause)
-    framerate=1/pause
+    framerate=1.0/pause
     duplicates=int(duration*framerate)
 else:
     print "Insert output framerate video in images per second [%s]: " %(framerate_default ),
@@ -94,14 +111,14 @@ else:
     duplicates=0
 
 i=0
-outvideo=files[0]
 while i < len(files):
     if not os.path.exists(files[i]):
         print '%s not found' %(files[i])
         exit(-3)
     elif os.path.isdir(files[i]):
         for j in os.listdir(files[i]):
-            files.append(files[i]+'/'+j)
+            files.insert(i,files[i]+'/'+j)
+            i+=1
         files.pop(i)
     else: # files[i] is file or symlink
         if date_split:
@@ -127,7 +144,9 @@ while i < len(files):
 audio_in = '-f pulse -i alsa_output.usb-GeneralPlus_USB_Audio_Device-00.analog-stereo'  #For pulseaudio(pipewire) as audio source
 audio_out= '-c:a aac -shortest'
 
+
 if date_split:
+    outvideo=files[0]
     files = os.listdir(temporarydir)
     for i in files:
         outvideo = outvideoexists(outvideo.rsplit('/',1)[0]+'/'+i+'.mp4')
@@ -138,15 +157,16 @@ if date_split:
         os.system('mv %s %s' %('/tmp/'+outvideo.rsplit('/',1)[1],outvideo))
         os.utime(outvideo, (outvideo_time,outvideo_time))
 
-             
 else:
-    outvideo=outvideoexists(outvideo+'.mp4')
-    outvideo_time=os.path.getmtime(files[0])
+    if 'outvideo' not in globals():
+        outvideo=files[0]
+        outvideo=outvideoexists(outvideo+'.mp4')
+        if slideshow:
+            outvideo = outvideo.rsplit('.',1)
+            outvideo = outvideo[0]+'_slide.'+outvideo[1]
+    outvideo_time=os.path.getmtime(files[-1])
     if slideshow:
-        #import pdb;pdb.set_trace()
-        outvideo = outvideo.rsplit('.',1)
-        outvideo = outvideo[0]+'_slide.'+outvideo[1]
-        cmd="ffmpeg %s -r %s -pattern_type glob -i '%s/*.jpg' -vf scale=%s %s /tmp/%s" %(audio_in, framerate,temporarydir,resolution,audio_out,outvideo.rsplit('/',1)[1])
+        cmd="ffmpeg %s -framerate %s -pattern_type glob -i '%s/*.jpg' -vf scale=%s %s /tmp/%s" %(audio_in, framerate,temporarydir,resolution,audio_out,outvideo.rsplit('/',1)[1])
         #cmd="ffmpeg -r %s -pattern_type glob -i '%s/*.jpg' -vf scale=%s /tmp/%s" %(framerate,temporarydir,resolution,outvideo.rsplit('/',1)[1])
     else:
         cmd="ffmpeg %s -r %s -pattern_type glob  -i '%s/*.jpg' -vf scale=%s %s /tmp/%s" %(audio_in, framerate,temporarydir,resolution,audio_out,outvideo.rsplit('/',1)[1])

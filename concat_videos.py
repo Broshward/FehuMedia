@@ -2,25 +2,48 @@
 #coding:utf8
 
 import sys,os
+usage='''
+    usage: %s [--sort-time] [--resolution] photo and video files for creating
+        --sort-time     Make sorting files as time increasing 
+        --resolution    Scale output video for resolution
+        -o filename     Output video filename
+''' %(sys.argv[0])
+
+if '--help' in sys.argv:
+    print usage
+    exit(0)
+
 if '--sort-time' in sys.argv:
     sys.argv.remove('--sort-time')
     sort = 'time'
 else:
     sort = ''
 
+if '--resolution' in sys.argv:
+    resolution = sys.argv[sys.argv.index('--resolution')+1]
+    sys.argv.pop(sys.argv.index('--resolution')+1)
+    sys.argv.pop(sys.argv.index('--resolution'))
+
+if '-o' in sys.argv:
+    outvideo = sys.argv[sys.argv.index('-o')+1]
+    sys.argv.pop(sys.argv.index('-o')+1)
+    sys.argv.pop(sys.argv.index('-o'))
+
+if len(sys.argv)==1:
+    print '\nEmpty input files list !!!\n' 
+    exit(-4)
 #list_files=open('list_files','wt')
 list_names=sys.argv[1:]
 
+times = []
+for i in list_names:
+    times.append([os.path.getmtime(i),i])
+times.sort()
+
 #import pdb;pdb.set_trace()
 if sort=='time':
-    times = []
-    for i in list_names:
-        times.append([os.path.getmtime(i),i])
-    times.sort()
     for i in range(len(times)):
         list_names[i]=times[i][1]
-
-time = os.path.getmtime(list_names[-1])
 
 # Output video filename calculate
 if 'output_video' not in globals():
@@ -45,5 +68,5 @@ for i in list_names:
     cmd = 'rm %s' %(i+'.ts')
     os.system(cmd)
 
-os.utime(output_video, (time,time))
+os.utime(output_video, (times[-1][0],times[-1][0]))
 

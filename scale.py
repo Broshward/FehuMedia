@@ -8,9 +8,19 @@ import sys,os,time
 usage='''
     usage: %s [--show] [-r] path/to/video/files
         --show          for show without file save
-        --resolution    output framerate. Default is 30
+        --resolution    output resolution
+        --replace       Replace input file
+        --not-replace   Do not replace input file
 ''' %(sys.argv[0])
 resolution='-1:720' #The default value
+
+def _nextnum(inputname):
+    outname=inputname.rsplit('/',1)[1].rsplit('.',1)
+    num=1
+    while os.path.exists(inputname.rsplit('/',1)[0]+'/'+outname[0]+'_%d.%s' %(num,outname[1])):
+        num+=1
+    outname = i.rsplit('/',1)[0]+'/'+outname[0]+'_%d.%s' %(num,outname[1])
+    return outname
 
 def outvideoexists(outvideo):
     if os.path.exists(outvideo):
@@ -34,6 +44,13 @@ if '--show' in sys.argv:
 else:
     show = False
 
+if '--replace' in sys.argv:
+    replace=True
+    sys.argv.remove('--replace')
+if '--not-replace' in sys.argv:
+    sys.argv.remove('--not-replace')
+    replace=False
+
 if '--resolution' in sys.argv:
     resolution = sys.argv[sys.argv.index('--resolution')+1]
     sys.argv.pop(sys.argv.index('--resolution')+1)
@@ -42,19 +59,21 @@ if '--resolution' in sys.argv:
 files = sys.argv[1:]
 
 if not show:
-    print 'Replace input file(s)? (N or additions for create a copy) [Y/n]: ',
-    ans = sys.stdin.readline().strip()
+    if 'replace' not in globals():
+        print 'Replace input file(s)? (N or additions for create a copy) [Y/n]: ',
+        ans = sys.stdin.readline().strip()
+    elif replace:
+        ans = 'y'
+    else:
+        ans = 'n'
 else:
     ans=''
+
 
 for i in files:
     outvideo_time=os.path.getmtime(i)
     if ans=='' or (ans in 'yYNn'):
-        outvideo=i.rsplit('/',1)[1].rsplit('.',1)
-        num=1
-        while os.path.exists(i.rsplit('/',1)[0]+'/'+outvideo[0]+'_%d.%s' %(num,outvideo[1])):
-            num+=1
-        outvideo = i.rsplit('/',1)[0]+'/'+outvideo[0]+'_%d.%s' %(num,outvideo[1])
+        outvideo = _nextnum(i)
     else:
         outvideo=i.rsplit('/',1)[1].rsplit('.',1)
         outvideo = i.rsplit('/',1)[0]+'/'+outvideo[0]+ans+outvideo[1]

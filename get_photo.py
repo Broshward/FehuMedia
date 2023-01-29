@@ -17,8 +17,8 @@ def get_photo():
     print 'File name is ',out
     return os.system('rotate-90.py %s' %(out))
     
-    #import pdb;pdb.set_trace()
 
+#import pdb;pdb.set_trace()
 if '-I' in sys.argv:
     i=sys.argv.index('-I')
     sys.argv.pop(i)
@@ -37,6 +37,7 @@ if '-I' in sys.argv:
             print int(i),'\r',
             sys.stdout.flush()
             time.sleep(1)
+            i-=1
 else:
     get_photo()
 

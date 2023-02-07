@@ -4,10 +4,12 @@
 import sys,os,time,re
 
 usage='''
-    usage: %s photo and video files for creating
+    usage: %s [-r] [-o filename] [--resolution Width:Height] [--temp-dir temp_dir] /photo/and/video/files&directories/for/creating
         -r                          output framerate. Default is 30
         -o filename                 Output video filename
         --resolution Width:Height   Output resolution for video. If 'min' or 'max' value is given then it make output video resolution to max or min of input files resolution.
+        --duration dur,pause        Duration of frame and pause for crossing images (for SlideShow only)
+        --temp-dir temp_dir         When launchs program in tmpfs, temporarily files volume may be too large and it will have make the "No space left" error. --temp-dir option will be create temporarily files in the temp_dir directory
 ''' %(sys.argv[0])
 
 def _nextnum(inputname):
@@ -55,6 +57,18 @@ if '--resolution' in sys.argv:
     resolution = sys.argv[sys.argv.index('--resolution')+1]
     sys.argv.pop(sys.argv.index('--resolution')+1)
     sys.argv.pop(sys.argv.index('--resolution'))
+
+if '--duration' in sys.argv:
+    duration = sys.argv[sys.argv.index('--duration')+1]
+    sys.argv.pop(sys.argv.index('--duration')+1)
+    sys.argv.pop(sys.argv.index('--duration'))
+
+if '--temp-dir' in sys.argv:
+    temp_dir = sys.argv[sys.argv.index('--temp-dir')+1]
+    if not temp_dir.endswith('/'):
+        temp_dir += '/'
+    sys.argv.pop(sys.argv.index('--temp-dir')+1)
+    sys.argv.pop(sys.argv.index('--temp-dir'))
 
 if len(sys.argv)==1:
     print '\nEmpty input files list !!!\n' 
@@ -115,13 +129,21 @@ while i<len(files):
         # Creating slideshow from images
         # i is end of images for slideshow
         # beg_img is beg of images for slideshow
-        outvideo = files[beg_img][1]+'.mp4'
+        if 'temp_dir' in globals():
+            outvideo = temp_dir + files[beg_img][1].rsplit('/',1)[1] + '.mp4'
+        else:
+            outvideo = files[beg_img][1]+'.mp4'
         list_for_concat.append(outvideo)
         temp_files.append(outvideo)
+        cmd = 'image_for_video.py '
         if 'resolution' in globals():
-            cmd = 'image_for_video.py --resolution %s -o %s --slideshow --duration "2,1" %s' %(resolution, outvideo, ' '.join([file[1] for file in files][beg_img:i]))
+            cmd += '--resolution %s ' %(resolution)
+        cmd += '--slideshow '
+        if 'duration' in globals():
+            cmd += '--duration %s ' %(duration)
         else:
-            cmd = 'image_for_video.py -o %s --slideshow --duration "2,1" %s' %(outvideo, ' '.join([file[1] for file in files][beg_img:i]))
+            cmd += '--duration "2,1" ' # Default duration/pause values for --slideshow
+        cmd += '-o %s %s' %( outvideo, ' '.join([file[1] for file in files][beg_img:i]))
 
         print '\n',cmd
         if os.system(cmd):
@@ -136,7 +158,10 @@ while i<len(files):
     elif files[i][1].rsplit('.',1)[1].lower() in videos:
         if 'resolution' in globals():
             if int(resolution.split(':',1)[1]) != files[i][4]: # Scale needing
-                outvideo = _nextnum(files[i][1])
+                if 'temp_dir' in globals():
+                    outvideo = temp_dir + _nextnum(files[i][1]).rsplit('/',1)[1]
+                else:
+                    outvideo = _nextnum(files[i][1])
                 cmd = 'scale.py --not-replace --resolution %s %s' %(resolution,files[i][1])
                 if os.system(cmd):
                     exit(-6)
@@ -156,7 +181,12 @@ if 'output_video' not in globals():
     output_video = files[0][1].rsplit('.',1)[0]+'_join.mp4' #Default output filename
 
 # Concatenate parts
-cmd = 'concat_videos.py -o %s %s' %(output_video, ' '.join(list_for_concat))
+cmd = 'concat_videos.py '
+if 'temp_dir' in globals():
+    cmd += '--temp-dir %s ' %(temp_dir)
+if sort == 'time':
+    cmd += '--sort-time '
+cmd += '-o %s %s' %(output_video, ' '.join(list_for_concat))
 print cmd
 os.system(cmd)
 

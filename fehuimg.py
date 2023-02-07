@@ -159,7 +159,11 @@ def mount(mount_point,comments):
             print i
             exit(2)
         
-        if not os.path.exists(file):
+        try:
+            if not os.path.exists(file):
+                continue
+        except:
+            import pdb; pdb.set_trace()
             continue
 
         if 'size' in globals().keys():
@@ -191,7 +195,6 @@ def mount(mount_point,comments):
                 symlink_time_change(timestamp,symlink)
         else:
             #--- Symlink in all of date dirs ---
-            #import pdb; pdb.set_trace()
             dirs=dates_dir+'/'.join(date)
             for i in range(len(date)):
                 dir = dates_dir+'/'.join(date[:i+1])+'/'
@@ -276,7 +279,9 @@ if __name__=='__main__':
          
     if '-c' in sys.argv:
         sys.argv.remove('-c')
-        create_cache()
+        os.remove(dirs_file)
+        os.open(dirs_file,'w').close()
+        create_cache(True)
         exit(0)
 
     if '-cn' in sys.argv:

@@ -9,6 +9,7 @@ usage='''
     usage: %s [-f] path/to/video/files
         This program add audio to video or replace if it exists. If no audio files input then it add silent audio.
         -f      audio file
+        --mix   mixing external audio source and audio from video
 ''' %(sys.argv[0])
 
 
@@ -28,12 +29,16 @@ def outvideoexists(outvideo):
             outvideo = ans
     return outvideo
 
+if '--mix' in sys.argv:
+    sys.argv.pop(sys.argv.index('--mix'))
+    mix=True
+else:
+    mix=False
+
 if '-f' in sys.argv:
     audio_file = sys.argv[sys.argv.index('-f')+1]
     sys.argv.pop(sys.argv.index('-f')+1)
     sys.argv.pop(sys.argv.index('-f'))
-else:
-    audio_file = ''
 
 files = sys.argv[1:]
 
@@ -42,9 +47,11 @@ ans = sys.stdin.readline().strip()
 
 #audio_in = '-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100'
 #audio_in = '-f alsa -i default'
-audio_in = '-f pulse -i "alsa_output.usb-GeneralPlus_USB_Audio_Device-00.analog-stereo"'
+audio_in = '-f pulse -i "alsa_output.usb-GeneralPlus_USB_Audio_Device-00.analog-stereo" '
 #audio_in = '-f pulse -i "USB Audio Device"'
 audio_out= '-c:a aac -shortest'
+mixing_audio = '-filter_complex "[0:a][1:a]amerge=inputs=2[a]" -map 0:v -map "[a]" '
+
 
 for i in files:
     outvideo_time=os.path.getmtime(i)
@@ -58,11 +65,17 @@ for i in files:
         outvideo=i.rsplit('/',1)[1].rsplit('.',1)
         outvideo = i.rsplit('/',1)[0]+'/'+outvideo[0]+ans+outvideo[1]
 
-    if audio_file == '':
-        cmd="ffmpeg %s -i %s -c:v copy %s %s" %(audio_in, i, audio_out, outvideo)
+    cmd = 'ffmpeg -i %s ' %(i) # Video file is input
+    if 'audio_file' in globals():
+        cmd += "-stream_loop -1 -i %s " %(audio_file) # Audio file is input add
     else:
-        #cmd = "ffmpeg -stream_loop -1 -i %s -i %s -c:v copy %s -y %s" %(audio_file, i, audio_out, outvideo)
-        cmd = "ffmpeg -stream_loop -1 -i %s -i %s -map 0:a -map 1:v -c:v copy %s -y %s" %(audio_file, i, audio_out, outvideo)
+        cmd += audio_in + ' '  # Audio source is input add
+
+    if mix:
+        cmd += mixing_audio + ' '
+    else:
+        cmd += '-map 0:v -map 1:a '
+    cmd += ' -c:v copy %s -y %s ' %(audio_out, outvideo)
     print cmd
     if os.system(cmd) != 0:
         exit(-127)

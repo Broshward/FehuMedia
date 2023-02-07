@@ -110,8 +110,16 @@ else:
 #    exit(-1)
     duplicates=0
 
+if 'outvideo' not in globals():
+    outvideo='./'+files[0].rsplit('/',1)[1]
+    outvideo=outvideoexists(outvideo+'.mp4')
+    if slideshow:
+        outvideo = outvideo.rsplit('.',1)
+        outvideo = outvideo[0]+'_slide.'+outvideo[1]
+
 i=0
 while i < len(files):
+    #import pdb;pdb.set_trace()
     if not os.path.exists(files[i]):
         print '%s not found' %(files[i])
         exit(-3)
@@ -119,7 +127,9 @@ while i < len(files):
         for j in os.listdir(files[i]):
             files.insert(i,files[i]+'/'+j)
             i+=1
+        j=len(os.listdir(files[i]))
         files.pop(i)
+        i-=j
     else: # files[i] is file or symlink
         if date_split:
             from datetime import datetime
@@ -129,7 +139,6 @@ while i < len(files):
         else:
             out_date = ''
         for j in range(duplicates+1):
-            #import pdb;pdb.set_trace()
             symlink_name = temporarydir+out_date+str(int(os.stat(files[i]).st_mtime*1000)+j)+'.'+files[i].rsplit('.',1)[1].lower()
             if os.path.exists(symlink_name):
                 print 'it is almost impossible! Most probably you have duplicate of frame with identical creating time. Source file is: ',files[i]
@@ -158,18 +167,12 @@ if date_split:
         os.utime(outvideo, (outvideo_time,outvideo_time))
 
 else:
-    if 'outvideo' not in globals():
-        outvideo=files[0]
-        outvideo=outvideoexists(outvideo+'.mp4')
-        if slideshow:
-            outvideo = outvideo.rsplit('.',1)
-            outvideo = outvideo[0]+'_slide.'+outvideo[1]
     outvideo_time=os.path.getmtime(files[-1])
     if slideshow:
         cmd="ffmpeg %s -framerate %s -pattern_type glob -i '%s/*.jpg' -vf scale=%s %s /tmp/%s" %(audio_in, framerate,temporarydir,resolution,audio_out,outvideo.rsplit('/',1)[1])
         #cmd="ffmpeg -r %s -pattern_type glob -i '%s/*.jpg' -vf scale=%s /tmp/%s" %(framerate,temporarydir,resolution,outvideo.rsplit('/',1)[1])
     else:
-        cmd="ffmpeg %s -r %s -pattern_type glob  -i '%s/*.jpg' -vf scale=%s %s /tmp/%s" %(audio_in, framerate,temporarydir,resolution,audio_out,outvideo.rsplit('/',1)[1])
+        cmd="ffmpeg %s -framerate %s -pattern_type glob  -i '%s/*.jpg' -vf scale=%s %s /tmp/%s" %(audio_in, framerate,temporarydir,resolution,audio_out,outvideo.rsplit('/',1)[1])
     print cmd
     os.system(cmd)
     os.system('mv %s %s' %('/tmp/'+outvideo.rsplit('/',1)[1],outvideo))

@@ -47,6 +47,8 @@ for i in files:
     #import pdb;pdb.set_trace()
     if outvideo.rsplit('.',)[1].lower() in 'jpg,jpe,png,tiff,jpeg,bmp': #for images
         cmd = "convert %s -modulate 100,%d %s" %(i,saturation*100,outvideo)
+        if show:
+            cmd += ';feh -F %s ;rm %s' %(outvideo,outvideo);
     else: # for video
         if show:
             cmd="ffplay -fs -vf eq=saturation=%f %s" %(saturation,i)
@@ -56,9 +58,9 @@ for i in files:
     if os.system(cmd) != 0:
         exit(-1)
 
-    os.utime(outvideo, (outvideo_time,outvideo_time))
 
     if not show:
+        os.utime(outvideo, (outvideo_time,outvideo_time))
         if ans=='y' or ans=='Y' or ans=='':
             cmd = 'mv %s %s' %(outvideo,i) 
             print cmd

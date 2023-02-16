@@ -131,8 +131,7 @@ if not os.path.exists(times_rates_file):
     f=open(times_rates_file,'wt')
     f.write(tempos_template)
     f.close()
-    os.utime(times_rates_file, (outvideo_time,outvideo_time))
-    print "Please edit times_tempos file %s and restart program!"
+    os.system('gvim %s' %(times_rates_file))
     exit(0)
 
 times_rates=[]

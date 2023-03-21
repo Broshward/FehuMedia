@@ -98,6 +98,13 @@ if not os.path.exists(input_video):
     print "Input video file not found!"
     exit(-2)
 
+# -- This need to add in the all utils which worked with media
+#filename = os.path.realpath(filename)
+comment=os.popen("get_comment %s" % (input_video)).read()
+if "User Comment" in comment: # For JPEG, else for videos
+    comment = comment.split(':',1)[1].strip()
+# -- This need to add in the all utils which worked with media
+
 input_rate = float(os.popen("ffmpeg -i %s 2>&1 |grep fps" %(input_video)).read().split('fps',1)[0].rsplit(',',1)[1].strip())
 print input_rate
 
@@ -196,6 +203,11 @@ if os.system(cmd)!=0:
     exit(-127)
 
 os.system('mv 00_concat.%s %s' %(output_video.rsplit('.',1)[1],output_video))
+
+# -- This need to add in the all utils which worked with media
+cmd='/usr/bin/vendor_perl/exiftool -overwrite_original %s -UserComment=\'%s\'' %(output_video,comment)
+os.system(cmd)
+# -- This need to add in the all utils which worked with media
 os.utime(output_video, (outvideo_time,outvideo_time))
 
 #Remove temporarily files

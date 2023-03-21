@@ -279,8 +279,9 @@ if __name__=='__main__':
          
     if '-c' in sys.argv:
         sys.argv.remove('-c')
-        os.remove(dirs_file)
-        os.open(dirs_file,'w').close()
+        try:os.remove(cache_file)
+        except:None
+        open(cache_file,'w').close()
         create_cache(True)
         exit(0)
 

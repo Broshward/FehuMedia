@@ -11,6 +11,7 @@ for i in range(len(tags)):
 tags=';'.join(tags)
 
 filename=sys.argv[1]
+filename = os.path.realpath(filename)
 
 comment=os.popen("get_comment %s" % (filename)).read()
 if "User Comment" in comment: # For JPEG, else for videos

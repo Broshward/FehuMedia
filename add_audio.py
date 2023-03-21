@@ -27,6 +27,8 @@ def outvideoexists(outvideo):
             print 'Overwriting file %s' %(outvideo)
         else:
             outvideo = ans
+
+    outvideo = os.path.realpath(outvideo)
     return outvideo
 
 if '--mix' in sys.argv:
@@ -54,6 +56,7 @@ mixing_audio = '-filter_complex "[0:a][1:a]amerge=inputs=2[a]" -map 0:v -map "[a
 
 
 for i in files:
+    i = os.path.realpath(i)
     outvideo_time=os.path.getmtime(i)
     if ans=='' or (ans in 'yYNn'):
         outvideo=i.rsplit('/',1)[1].rsplit('.',1)

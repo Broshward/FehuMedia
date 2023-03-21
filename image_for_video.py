@@ -87,7 +87,6 @@ if len(sys.argv)==1:
     exit(-4)
 files = sys.argv[1:]
 
-#import pdb;pdb.set_trace()
 if slideshow:
     if 'duration' not in globals():
         print "Insert picture duration and interval in seconds [%s]: " %(duration_pause_def),
@@ -117,6 +116,7 @@ if 'outvideo' not in globals():
         outvideo = outvideo.rsplit('.',1)
         outvideo = outvideo[0]+'_slide.'+outvideo[1]
 
+files.sort()
 i=0
 while i < len(files):
     #import pdb;pdb.set_trace()
@@ -138,20 +138,27 @@ while i < len(files):
                 os.mkdir(temporarydir+out_date)
         else:
             out_date = ''
+        #import pdb;pdb.set_trace()
         for j in range(duplicates+1):
             symlink_name = temporarydir+out_date+str(int(os.stat(files[i]).st_mtime*1000)+j)+'.'+files[i].rsplit('.',1)[1].lower()
             if os.path.exists(symlink_name):
-                print 'it is almost impossible! Most probably you have duplicate of frame with identical creating time. Source file is: ',files[i]
-                exit(-110)
+                print 'It is possible if you makes art for example :))'
+                if 'art_power' not in locals():
+                    art_power=1 # Counter for change link name
+                else:
+                    art_power+=1
+                symlink_name = temporarydir+out_date+str(int(os.stat(files[i]).st_mtime*1000)+j+art_power)+'.'+files[i].rsplit('.',1)[1].lower()
+                #exit(-110)
             #os.symlink(files[i],temporarydir+'/'+str(os.stat(files[i]).st_mtime_ns)) #For  python3 translating
             try:os.symlink(files[i],symlink_name)
             except:print symlink_name
         i+=1
 
-#audio_in = '-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100'      #For silent audio
+audio_in = '-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100'      #For silent audio
 #audio_in = '-f alsa -i default'                                                #For alsa as audio source
-audio_in = '-f pulse -i alsa_output.usb-GeneralPlus_USB_Audio_Device-00.analog-stereo'  #For pulseaudio(pipewire) as audio source
+#audio_in = '-f pulse -i alsa_output.usb-GeneralPlus_USB_Audio_Device-00.analog-stereo'  #For pulseaudio(pipewire) as audio source
 audio_out= '-c:a aac -shortest'
+#
 
 
 if date_split:

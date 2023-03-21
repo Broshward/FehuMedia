@@ -16,7 +16,7 @@ files = sys.argv[1:]
 for i in files:
     time=os.path.getmtime(i)
     outfile = i+'.aac'
-    cmd = "ffmpeg -i %s -c:v none -c:a aac %s" %(audio_file, i, audio_out, outfile)
+    cmd = "ffmpeg -i %s -c:v none -c:a aac %s" %(i, outfile)
     print cmd
     if os.system(cmd) != 0:
         exit(-127)

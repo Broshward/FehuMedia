@@ -13,6 +13,7 @@ usage: image_for_video.py [ file1 file2 ... fileN ] [ dir1 dir2 ... dirN ]
     --resolution Width:Height   Output resolution for video
     --duration dur,pause        Duration of frame and pause for crossing images (for SlideShow only)
     -o filename     Output video filename
+    -a audio_file   Add audio to video
 '''
 temporarydir='/tmp/temp'
 framerate_default = 10
@@ -75,6 +76,11 @@ if '-o' in sys.argv:
     outvideo = sys.argv[sys.argv.index('-o')+1]
     sys.argv.pop(sys.argv.index('-o')+1)
     sys.argv.pop(sys.argv.index('-o'))
+
+if '-a' in sys.argv:
+    audio_file = sys.argv[sys.argv.index('-a')+1]
+    sys.argv.pop(sys.argv.index('-a')+1)
+    sys.argv.pop(sys.argv.index('-a'))
 
 if '--split-date' in sys.argv:
     sys.argv.remove('--split-date')
@@ -154,11 +160,13 @@ while i < len(files):
             except:print symlink_name
         i+=1
 
-audio_in = '-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100'      #For silent audio
-#audio_in = '-f alsa -i default'                                                #For alsa as audio source
-#audio_in = '-f pulse -i alsa_output.usb-GeneralPlus_USB_Audio_Device-00.analog-stereo'  #For pulseaudio(pipewire) as audio source
+if 'audio_file' in globals():
+    audio_in = '-i %s' %(audio_file)
+else:
+    audio_in = '-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100'      #For silent audio
+    #audio_in = '-f alsa -i default'                                                #For alsa as audio source
+    #audio_in = '-f pulse -i alsa_output.usb-GeneralPlus_USB_Audio_Device-00.analog-stereo'  #For pulseaudio(pipewire) as audio source
 audio_out= '-c:a aac -shortest'
-#
 
 
 if date_split:

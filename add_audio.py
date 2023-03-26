@@ -10,6 +10,7 @@ usage='''
         This program add audio to video or replace if it exists. If no audio files input then it add silent audio.
         -f      audio file
         --mix   mixing external audio source and audio from video
+        --ask-difficult-questions        Interactive mode.
 ''' %(sys.argv[0])
 
 
@@ -42,6 +43,11 @@ if '-f' in sys.argv:
     sys.argv.pop(sys.argv.index('-f')+1)
     sys.argv.pop(sys.argv.index('-f'))
 
+if '--ask-difficult-questions' in sys.argv:
+    sys.argv.pop(sys.argv.index('--ask-difficult-questions'))
+    print "Insert audio file to add for videeo [Output of sound card is default]: ",
+    audio_file = sys.stdin.readline().strip() 
+
 files = sys.argv[1:]
 
 print 'Replace input file(s)? (N or additions for create a copy) [Y/n]: ',
@@ -70,7 +76,10 @@ for i in files:
 
     cmd = 'ffmpeg -i %s ' %(i) # Video file is input
     if 'audio_file' in globals():
-        cmd += "-stream_loop -1 -i %s " %(audio_file) # Audio file is input add
+        if audio_file == '':
+            cmd += audio_in + ' '  # Audio source is input  to add (Default)
+        else:
+            cmd += "-stream_loop -1 -i %s " %(audio_file) # Audio file is input add
     else:
         cmd += audio_in + ' '  # Audio source is input add
 

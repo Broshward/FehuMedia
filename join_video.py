@@ -5,12 +5,25 @@ import sys,os,time,re
 
 usage='''
     usage: %s [-r] [-o filename] [--resolution Width:Height] [--temp-dir temp_dir] /photo/and/video/files&directories/for/creating
+        --ask-difficult-questions        Interactive mode.
         -r                          output framerate. Default is 30
         -o filename                 Output video filename
         --resolution Width:Height   Output resolution for video. If 'min' or 'max' value is given then it make output video resolution to max or min of input files resolution.
         --duration dur,pause        Duration of frame and pause for crossing images (for SlideShow only)
         --temp-dir temp_dir         When launchs program in tmpfs, temporarily files volume may be too large and it will have make the "No space left" error. --temp-dir option will be create temporarily files in the temp_dir directory
+        --repeat-audio              If images in argv list or if videos without audio in argv list it will be take audio from videos in argv and repeat while video played.
 ''' %(sys.argv[0])
+
+duration_pause_def = '2,1'
+resolution_def = '-1:720'
+images='jpg,png'
+videos='mov,mp4'
+
+def is_image(file):
+    return file[1].rsplit('.',1)[1].lower() in images
+
+def is_video(file):
+    return file[1].rsplit('.',1)[1].lower() in videos
 
 def _nextnum(inputname):
     outname=inputname.rsplit('/',1)[1].rsplit('.',1)
@@ -48,6 +61,12 @@ if '--sort-time' in sys.argv:
 else:
     sort = ''
 
+if '--repeat-audio' in sys.argv:
+    sys.argv.remove('--repeat-audio')
+    repeat_audio = True
+else:
+    repeat_audio = False
+
 if '-o' in sys.argv:
     output_video = sys.argv[sys.argv.index('-o')+1]
     sys.argv.pop(sys.argv.index('-o')+1)
@@ -69,6 +88,11 @@ if '--temp-dir' in sys.argv:
         temp_dir += '/'
     sys.argv.pop(sys.argv.index('--temp-dir')+1)
     sys.argv.pop(sys.argv.index('--temp-dir'))
+
+if '--ask-difficult-questions' in sys.argv:
+    duration = 'ask'
+    resolution = 'ask'
+    sys.argv.pop(sys.argv.index('--ask-difficult-questions'))
 
 if len(sys.argv)==1:
     print '\nEmpty input files list !!!\n' 
@@ -94,8 +118,14 @@ if sort=='time':
 
     
 #import pdb;pdb.set_trace()
-if 'resolution' in globals(): #Make resolution as smallest height of videos (vertical)
-    if resolution == 'min':
+
+if 'resolution' in globals(): 
+    if resolution == 'ask':
+        print "Insert video resolution [%s]: " %(resolution_def),
+        resolution=sys.stdin.readline().strip()   
+        if resolution=='':
+            resolution=resolution_def
+    if resolution == 'min':#Make resolution as smallest height of videos (vertical)
         height = 4000# 4K max for video
         for i in files:
             if height>i[4]:
@@ -112,17 +142,21 @@ if 'resolution' in globals(): #Make resolution as smallest height of videos (ver
         #resolution = '%d:%d' %(width,height)
         resolution = '-1:%d' %(height)
 
-
+if 'duration' in globals(): #
+    if duration == 'ask':
+        print "Insert picture duration and interval in seconds [%s]: " %(duration_pause_def),
+        duration=sys.stdin.readline().strip()   
+        if duration == '':
+            duration=duration_pause_def
+       
 
 i=0
-images='jpg,png'
-videos='mov,mp4'
 list_for_concat = []
 temp_files = []
 while i<len(files):
-    if files[i][1].rsplit('.',1)[1].lower() in images:
+    if is_image(files[i]):
         beg_img=i
-        while files[i][1].rsplit('.',1)[1].lower() in images:
+        while is_image(files[i]):
             i+=1
             if i==len(files):
                 break
@@ -142,8 +176,19 @@ while i<len(files):
         if 'duration' in globals():
             cmd += '--duration %s ' %(duration)
         else:
-            cmd += '--duration "2,1" ' # Default duration/pause values for --slideshow
-        cmd += '-o %s %s' %( outvideo, ' '.join([file[1] for file in files][beg_img:i]))
+            cmd += '--duration %s ' %(duration_pause_def)# Default duration/pause values for --slideshow
+        cmd += '-o %s %s ' %( outvideo, ' '.join([file[1] for file in files][beg_img:i]))
+        
+        if repeat_audio:
+            if 'cur_audio' not in globals():
+                if i != 0: #Previous file is video
+                    cur_audio = files[i-1][1]
+                else: #Need to find first video file
+                    for v in files:
+                        if is_video(v):
+                            cur_audio=v[1]
+                            break
+            cmd += ' -a %s ' %(cur_audio)
 
         print '\n',cmd
         if os.system(cmd):
@@ -155,7 +200,7 @@ while i<len(files):
         if os.system(cmd):
             exit(-5)
         continue
-    elif files[i][1].rsplit('.',1)[1].lower() in videos:
+    elif is_video(files[i]):
         if 'resolution' in globals():
             if int(resolution.split(':',1)[1]) != files[i][4]: # Scale needing
                 if 'temp_dir' in globals():
@@ -171,6 +216,8 @@ while i<len(files):
                 list_for_concat.append(files[i][1])
         else:
             list_for_concat.append(files[i][1])
+        if repeat_audio:
+            cur_audio=files[i][1]
     else:
         print 'Ignoring file: ',files[i][1]
         

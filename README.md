@@ -1,3 +1,7 @@
+I am very sorry, but the #google don't let me to internet gouing (((:
+
+Do not worry and do not many attantion) This is just some simple utilities for my future photocamera)
+
 At present this is some scripts which I need for managing my photos. 
 
 At the nice day this will become convenient manager for storage and various task with photos, for example posting images with its comment in Twitter :)
@@ -18,4 +22,14 @@ Also you can simply copy your photos to another devices and your text and tags w
 You must only create cache there and mount fehumedia pseudo file system with fehuimg tool.
 
 *
-It is python2 scripts which depends from the "exiftool", exiftran, ImageMagick, ffmpeg and probably jpegtran in the future.
+Dependencies:
+It is python2 scripts which depends from the "exiftool", exiftran, ffmpeg and some function from ImageMagick.
+For showing it will be used feh and jpegtran for lossless cropping images..
+
+
+*********
+Notes:
+Variables, which adding in fehu.conf needed
+temp_dir  in join_video.py
+
+

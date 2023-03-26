@@ -17,16 +17,28 @@ else:
     show = False
 
 files = sys.argv[1:]
-
-saturation=1.5
-print 'Please insert new saturation in percentage/100 (1=100%, 2=200% and etc) [', saturation, ']: ',
+ 
+R=0.9;G=1;B=1.2 #Default RGB settings. It well after saturation adjust for 1.5
+print 'Please insert new RGB colors adjust in percentage/100 (1=100%%, 2=200%% and etc) [ %.1f %.1f %.1f ]: ' %(R,G,B),
 ans = sys.stdin.readline().strip()
 if ans=='':
     None
 else:
-    try:saturation=float(ans)
+    ans=ans.split()
+    if len(ans) != 3:
+        print 'RGB must contain 3 values!'
+        exit(2)
+    try: R=float(ans[0])
     except:
-        print "saturation must be float"
+        print "RED must be float"
+        exit(1)
+    try: G=float(ans[1])
+    except:
+        print "GREEN must be float"
+        exit(1)
+    try: B=float(ans[2])
+    except:
+        print "BLUE must be float"
         exit(1)
 
 if not show:
@@ -51,9 +63,9 @@ for i in files:
 #            cmd += ';feh -F %s ;rm %s' %(outvideo,outvideo);
 #    else: # for video
     if show:
-        cmd="ffplay -fs -vf eq=gamma_r=0.9:gamma_g=1:gamma_b=1.2 %s" %(i)
+        cmd="ffplay -fs -vf eq=gamma_r=%f:gamma_g=%f:gamma_b=%f %s" %(R,G,B,i)
     else:
-        cmd="ffmpeg -i %s -vf eq=gamma_r=0.9:gamma_g=1:gamma_b=1.2:gamma=1 -qscale:v 1 -qmin 1 %s" %(i,outvideo)
+        cmd="ffmpeg -i %s -vf eq=gamma_r=%f:gamma_g=%f:gamma_b=%f:gamma=1 -qscale:v 1 -qmin 1 %s" %(i,R,G,B,outvideo)
     print cmd
     if os.system(cmd) != 0:
         exit(-1)

@@ -14,6 +14,10 @@ usage='''
 files = sys.argv[1:]
 
 for i in files:
+    i = os.path.realpath(i)
+    comment=os.popen("get_comment %s" % (i)).read()
+    if "User Comment" in comment: # For JPEG, else for videos
+        comment = comment.split(':',1)[1].strip()
     time=os.path.getmtime(i)
     outfile = i+'.aac'
     cmd = "ffmpeg -i %s -c:v none -c:a aac %s" %(i, outfile)
@@ -22,4 +26,6 @@ for i in files:
         exit(-127)
 
     os.utime(outfile, (time,time))
+    cmd='/usr/bin/vendor_perl/exiftool -overwrite_original %s -UserComment=\'%s\'' %(outfile,comment)
+    os.system(cmd)
 

@@ -53,7 +53,7 @@ for i in files:
         if show:
             cmd="ffplay -fs -vf eq=saturation=%f %s" %(saturation,i)
         else:
-            cmd="ffmpeg -i %s -vf eq=saturation=%f %s" %(i,saturation,outvideo)
+            cmd="ffmpeg -i %s -vf eq=saturation=%f -qscale:v 1 -qmin 1 %s" %(i,saturation,outvideo)
     print cmd
     if os.system(cmd) != 0:
         exit(-1)

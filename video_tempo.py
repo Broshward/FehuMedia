@@ -105,8 +105,10 @@ if "User Comment" in comment: # For JPEG, else for videos
     comment = comment.split(':',1)[1].strip()
 # -- This need to add in the all utils which worked with media
 
-input_rate = float(os.popen("ffmpeg -i %s 2>&1 |grep fps" %(input_video)).read().split('fps',1)[0].rsplit(',',1)[1].strip())
-print input_rate
+info=os.popen("ffmpeg -i %s 2>&1 "%(input_video)).read()
+if 'fps' in info: # File is video
+    input_rate = float(info.split('fps',1)[0].rsplit(',',1)[1].strip())
+    print input_rate
 
 outvideo_time=os.path.getmtime(input_video)
 

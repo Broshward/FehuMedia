@@ -1,5 +1,3 @@
-I am very sorry, but the #google don't let me to internet gouing (((:
-
 Do not worry and do not many attantion) This is just some simple utilities for my future photocamera)
 
 At present this is some scripts which I need for managing my photos. 

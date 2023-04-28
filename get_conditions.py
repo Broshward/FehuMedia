@@ -9,6 +9,7 @@ filename = os.path.realpath(filename)
 
 data=os.popen('/usr/bin/vendor_perl/exiftool -g2 %s ' %(filename)).read()
 
+print 'Image:'
 param='File Name'
 print data[data.find(param):].split('\n',1)[0]
 param='File Size'
@@ -34,5 +35,13 @@ print data[data.find(param):].split('\n',1)[0]
 param='Hyperfocal Distance'
 print data[data.find(param):].split('\n',1)[0]
 
+print 'Video:'
+param='Media Duration'
+print data[data.find(param):].split('\n',1)[0]
+param='Video Frame Rate'
+print data[data.find(param):].split('\n',1)[0]
 
+print 'Audio:'
+param='Hyperfocal Distance'
+print data[data.find(param):].split('\n',1)[0]
 

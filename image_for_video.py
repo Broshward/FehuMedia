@@ -8,7 +8,6 @@ usage: image_for_video.py [ file1 file2 ... fileN ] [ dir1 dir2 ... dirN ]
     This program create the "temp" directory in /tmp/ and put to this symlinks points to input files. Symlinks renames accordingly date of files. 
     It's nessesary for ffmpeg input files regular expression.
 
-    --split-date                This option doing many files each from his date
     --slideshow                 This option doing many duplicate frame(s)
     --resolution Width:Height   Output resolution for video
     --duration dur,pause        Duration of frame and pause for crossing images (for SlideShow only)
@@ -82,12 +81,6 @@ if '-a' in sys.argv:
     sys.argv.pop(sys.argv.index('-a')+1)
     sys.argv.pop(sys.argv.index('-a'))
 
-if '--split-date' in sys.argv:
-    sys.argv.remove('--split-date')
-    date_split=True
-else: 
-    date_split=False
-
 if len(sys.argv)==1:
     print '\nEmpty input files list !!!\n' 
     exit(-4)
@@ -103,17 +96,22 @@ if slideshow:
         duration,pause = duration.split(',')
     duration=float(duration)
     pause=float(pause)
-    framerate=1.0/pause
-    duplicates=int(duration*framerate)
+    if pause == 0: # Slide show without interpolation crossing 
+        framerate = 1.0/duration
+        duration=0
+        slideshow = False
 else:
+    duration=pause=0
+
+if 'framerate' not in globals():
     print "Insert output framerate video in images per second [%s]: " %(framerate_default ),
     framerate=sys.stdin.readline().strip()
     if framerate=='':
         framerate = framerate_default
-#elif not framerate.isdigit():
-#    print "The framerate must be a digit!"
-#    exit(-1)
-    duplicates=0
+    elif not framerate.isdigit():
+        print "The framerate must be a digit!"
+        exit(-1)
+framerate = float(framerate)
 
 if 'outvideo' not in globals():
     outvideo='./'+files[0].rsplit('/',1)[1]
@@ -137,60 +135,45 @@ while i < len(files):
         files.pop(i)
         i-=j
     else: # files[i] is file or symlink
-        if date_split:
-            from datetime import datetime
-            out_date = datetime.fromtimestamp(os.stat(files[i]).st_mtime).strftime("%Y_%m_%d")+'/'        
-            if not os.path.exists(temporarydir+out_date):
-                os.mkdir(temporarydir+out_date)
-        else:
-            out_date = ''
         #import pdb;pdb.set_trace()
-        for j in range(duplicates+1):
-            symlink_name = temporarydir+out_date+str(int(os.stat(files[i]).st_mtime*1000)+j)+'.'+files[i].rsplit('.',1)[1].lower()
+
+        for j in range(int(duration*framerate+1)): # Make the slide
+            symlink_name = temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+j)+'.'+files[i].rsplit('.',1)[1].lower()
             if os.path.exists(symlink_name):
                 print 'It is possible if you makes art for example :))'
                 if 'art_power' not in locals():
                     art_power=1 # Counter for change link name
                 else:
                     art_power+=1
-                symlink_name = temporarydir+out_date+str(int(os.stat(files[i]).st_mtime*1000)+j+art_power)+'.'+files[i].rsplit('.',1)[1].lower()
+                symlink_name = temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+j+art_power)+'.'+files[i].rsplit('.',1)[1].lower()
                 #exit(-110)
             #os.symlink(files[i],temporarydir+'/'+str(os.stat(files[i]).st_mtime_ns)) #For  python3 translating
             try:os.symlink(files[i],symlink_name)
             except:print symlink_name
+        for j in range(int(pause*framerate)): # Make pause crossing (adding temporary crosing files to symlinks)
+            if (i+1) == len(files):break
+            print 'Make pause crossing images: ',j
+            percentage = j*100/(pause*framerate)
+            filename=temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+int(duration*framerate+1)+j)+'.'+files[i].rsplit('.',1)[1].lower()
+            os.system('composite -blend %s -gravity South %s %s %s' %(percentage,files[i+1],files[i],filename))
         i+=1
 
 if 'audio_file' in globals():
     audio_in = '-i %s' %(audio_file)
+    audio_out= '-c:a aac -shortest'
 else:
     audio_in = '-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100'      #For silent audio
+    audio_out= '-shortest'
     #audio_in = '-f alsa -i default'                                                #For alsa as audio source
     #audio_in = '-f pulse -i alsa_output.usb-GeneralPlus_USB_Audio_Device-00.analog-stereo'  #For pulseaudio(pipewire) as audio source
-audio_out= '-c:a aac -shortest'
 
 
-if date_split:
-    outvideo=files[0]
-    files = os.listdir(temporarydir)
-    for i in files:
-        outvideo = outvideoexists(outvideo.rsplit('/',1)[0]+'/'+i+'.mp4')
-        outvideo_time=float(os.listdir(temporarydir+i)[0].split('.')[0])/1000
-        cmd="ffmpeg -r %s -pattern_type glob -i '%s/*.jpg' -vf scale=%s /tmp/%s" %(framerate,temporarydir+i,resolution,outvideo.rsplit('/',1)[1])
-        print cmd
-        os.system(cmd)
-        os.system('mv %s %s' %('/tmp/'+outvideo.rsplit('/',1)[1],outvideo))
-        os.utime(outvideo, (outvideo_time,outvideo_time))
-
-else:
-    outvideo_time=os.path.getmtime(files[-1])
-    if slideshow:
-        cmd="ffmpeg %s -framerate %s -pattern_type glob -i '%s/*.jpg' -vf scale=%s %s /tmp/%s" %(audio_in, framerate,temporarydir,resolution,audio_out,outvideo.rsplit('/',1)[1])
-        #cmd="ffmpeg -r %s -pattern_type glob -i '%s/*.jpg' -vf scale=%s /tmp/%s" %(framerate,temporarydir,resolution,outvideo.rsplit('/',1)[1])
-    else:
-        cmd="ffmpeg %s -framerate %s -pattern_type glob  -i '%s/*.jpg' -vf scale=%s %s /tmp/%s" %(audio_in, framerate,temporarydir,resolution,audio_out,outvideo.rsplit('/',1)[1])
-    print cmd
-    os.system(cmd)
-    os.system('mv %s %s' %('/tmp/'+outvideo.rsplit('/',1)[1],outvideo))
-    os.utime(outvideo, (outvideo_time,outvideo_time))
+outvideo_time=os.path.getmtime(files[-1])
+cmd="ffmpeg %s -framerate %s -pattern_type glob -i '%s/*.jpg' -vf scale=%s %s /tmp/%s" %(audio_in, framerate,temporarydir,resolution,audio_out,outvideo.rsplit('/',1)[1])
+print cmd
+os.system(cmd)
+os.system('mv %s %s' %('/tmp/'+outvideo.rsplit('/',1)[1],outvideo))
+os.utime(outvideo, (outvideo_time,outvideo_time))
+os.system('rm -rf %s' %(temporarydir))
 
 

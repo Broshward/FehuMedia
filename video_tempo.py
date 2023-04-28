@@ -40,6 +40,7 @@ Options:
                                 If extentions of input and output files coincides then 
                                 it will be copy video content for ScaleFactors equal "1".
                                 Else it will be convert to other format video.
+    --without-concat            Splitting and temporing file and no concat parts
 """
 
 tempos_template = '''#Format string: FirstTime-LastTime,Tempo
@@ -85,6 +86,12 @@ if '-t' in sys.argv:
     sys.argv.pop(r_index)
     sys.argv.pop(r_index)
 
+if '--without-concat' in sys.argv:
+    r_index=sys.argv.remove('--without-concat')
+    without_concat=True
+else:
+    without_concat=False
+  
 sys.argv.pop(0)
 
 if len(sys.argv)==0:
@@ -198,6 +205,16 @@ for i in times_rates:
     name += 1
     print cmd
     os.system(cmd)
+
+if without_concat:
+    for i in list_filenames.split():
+        cmd='/usr/bin/vendor_perl/exiftool -overwrite_original %s -UserComment=\'%s\'' %(i,comment)
+        os.system(cmd)
+        os.utime(i, (outvideo_time,outvideo_time))
+        os.rename(i, output_video.rsplit('.',1)[0]+'_'+i.split('.',1)[0]+'.'+output_video.rsplit('.',1)[1])
+    exit(0)
+
+
 #Concatenate parts from temporarily files to output 
 cmd='concat_videos.py %s' %(list_filenames)
 print cmd

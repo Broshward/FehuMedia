@@ -11,6 +11,7 @@ usage: image_for_video.py [ file1 file2 ... fileN ] [ dir1 dir2 ... dirN ]
     --slideshow                 This option doing many duplicate frame(s)
     --resolution Width:Height   Output resolution for video
     --duration dur,pause        Duration of frame and pause for crossing images (for SlideShow only)
+    --framerate rate            Framerate settings
     -o filename     Output video filename
     -a audio_file   Add audio to video
 '''
@@ -70,6 +71,11 @@ if '--duration' in sys.argv:
     duration = sys.argv[sys.argv.index('--duration')+1]
     sys.argv.pop(sys.argv.index('--duration')+1)
     sys.argv.pop(sys.argv.index('--duration'))
+
+if '--framerate' in sys.argv:
+    framerate = sys.argv[sys.argv.index('--framerate')+1]
+    sys.argv.pop(sys.argv.index('--framerate')+1)
+    sys.argv.pop(sys.argv.index('--framerate'))
 
 if '-o' in sys.argv:
     outvideo = sys.argv[sys.argv.index('-o')+1]
@@ -159,17 +165,17 @@ while i < len(files):
         i+=1
 
 if 'audio_file' in globals():
-    audio_in = '-i %s' %(audio_file)
+    audio_in = '-stream_loop -1 -i %s' %(audio_file)
     audio_out= '-c:a aac -shortest'
 else:
     audio_in = '-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100'      #For silent audio
-    audio_out= '-shortest'
+    audio_out= '-c:a aac -shortest'
     #audio_in = '-f alsa -i default'                                                #For alsa as audio source
     #audio_in = '-f pulse -i alsa_output.usb-GeneralPlus_USB_Audio_Device-00.analog-stereo'  #For pulseaudio(pipewire) as audio source
 
 
 outvideo_time=os.path.getmtime(files[-1])
-cmd="ffmpeg %s -framerate %s -pattern_type glob -i '%s/*.jpg' -vf scale=%s %s /tmp/%s" %(audio_in, framerate,temporarydir,resolution,audio_out,outvideo.rsplit('/',1)[1])
+cmd="ffmpeg %s -framerate %s -pattern_type glob -i '%s/*.jpg' -map 0:a -map 1:v -vf scale=%s %s /tmp/%s" %(audio_in, framerate,temporarydir,resolution,audio_out,outvideo.rsplit('/',1)[1])
 print cmd
 os.system(cmd)
 os.system('mv %s %s' %('/tmp/'+outvideo.rsplit('/',1)[1],outvideo))

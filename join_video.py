@@ -15,7 +15,7 @@ usage='''
 ''' %(sys.argv[0])
 
 duration_pause_def = '2,1'
-resolution_def = '-1:720'
+resolution_def = '-1:-1'
 images='jpg,png'
 videos='mov,mp4'
 
@@ -117,7 +117,6 @@ if sort=='time':
     files.sort()
 
     
-#import pdb;pdb.set_trace()
 
 if 'resolution' in globals(): 
     if resolution == 'ask':
@@ -141,6 +140,8 @@ if 'resolution' in globals():
                 width = i[3]
         #resolution = '%d:%d' %(width,height)
         resolution = '-1:%d' %(height)
+    elif resolution =='-1:-1':
+        del resolution
 
 if 'duration' in globals(): #
     if duration == 'ask':
@@ -156,10 +157,9 @@ temp_files = []
 while i<len(files):
     if is_image(files[i]):
         beg_img=i
-        while is_image(files[i]):
+        while (i<(len(files)-1)) and is_image(files[i+1]):
             i+=1
-            if i==len(files):
-                break
+                #import pdb;pdb.set_trace()
         # Creating slideshow from images
         # i is end of images for slideshow
         # beg_img is beg of images for slideshow
@@ -169,7 +169,7 @@ while i<len(files):
             outvideo = files[beg_img][1]+'.mp4'
         list_for_concat.append(outvideo)
         temp_files.append(outvideo)
-        cmd = 'image_for_video.py '
+        cmd = 'image_for_video.py --framerate 10 '
         if 'resolution' in globals():
             cmd += '--resolution %s ' %(resolution)
         cmd += '--slideshow '
@@ -177,17 +177,17 @@ while i<len(files):
             cmd += '--duration %s ' %(duration)
         else:
             cmd += '--duration %s ' %(duration_pause_def)# Default duration/pause values for --slideshow
-        cmd += '-o %s %s ' %( outvideo, ' '.join([file[1] for file in files][beg_img:i]))
+        cmd += '-o %s %s ' %( outvideo, ' '.join([file[1] for file in files][beg_img:i+1]))
         
         if repeat_audio:
             if 'cur_audio' not in globals():
-                if i != 0: #Previous file is video
-                    cur_audio = files[i-1][1]
-                else: #Need to find first video file
-                    for v in files:
-                        if is_video(v):
-                            cur_audio=v[1]
-                            break
+               # if i != 0: #Previous file is video
+               #     cur_audio = files[i-1][1]
+               # else: #Need to find first video file
+                for v in files:
+                    if is_video(v):
+                        cur_audio=v[1]
+                        break
             cmd += ' -a %s ' %(cur_audio)
 
         print '\n',cmd
@@ -195,11 +195,10 @@ while i<len(files):
             exit(-2)
 
         # Framerate slideshow to 30fps as default for framerate.py !!!!!  Need add -r option.
-        cmd = 'framerate.py --replace %s' %(outvideo)
-        print '\n', cmd
-        if os.system(cmd):
-            exit(-5)
-        continue
+        #cmd = 'framerate.py --replace %s' %(outvideo)
+        #print '\n', cmd
+        #if os.system(cmd):
+        #    exit(-5)
     elif is_video(files[i]):
         if 'resolution' in globals():
             if int(resolution.split(':',1)[1]) != files[i][4]: # Scale needing
@@ -228,7 +227,7 @@ if 'output_video' not in globals():
     output_video = files[0][1].rsplit('.',1)[0]+'_join.mp4' #Default output filename
 
 # Concatenate parts
-cmd = 'concat_videos.py '
+cmd = 'concat_videos.py --crossing-add '
 if 'temp_dir' in globals():
     cmd += '--temp-dir %s ' %(temp_dir)
 if sort == 'time':

@@ -8,8 +8,9 @@ import sys,os,time
 usage='''
     usage: %s [-f] path/to/video/files
         This program add audio to video or replace if it exists. If no audio files input then it add silent audio.
-        -f      audio file
-        --mix   mixing external audio source and audio from video
+        -f          audio file
+        --mix       mixing external audio source and audio from video
+        --silent    Add the silent audio
         --ask-difficult-questions        Interactive mode.
 ''' %(sys.argv[0])
 
@@ -38,6 +39,12 @@ if '--mix' in sys.argv:
 else:
     mix=False
 
+if '--silent' in sys.argv:
+    sys.argv.pop(sys.argv.index('--silent'))
+    silent=True
+else:
+    silent=False
+
 if '-f' in sys.argv:
     audio_file = sys.argv[sys.argv.index('-f')+1]
     sys.argv.pop(sys.argv.index('-f')+1)
@@ -53,10 +60,13 @@ files = sys.argv[1:]
 print 'Replace input file(s)? (N or additions for create a copy) [Y/n]: ',
 ans = sys.stdin.readline().strip()
 
-#audio_in = '-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100'
+if silent==True:
+    audio_in = '-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100'
+else:
 #audio_in = '-f alsa -i default'
-audio_in = '-f pulse -i "alsa_output.usb-GeneralPlus_USB_Audio_Device-00.analog-stereo" '
+    audio_in = '-f pulse -i "alsa_output.usb-GeneralPlus_USB_Audio_Device-00.*analog-stereo" '
 #audio_in = '-f pulse -i "USB Audio Device"'
+
 audio_out= '-c:a aac -shortest'
 mixing_audio = '-filter_complex "[0:a][1:a]amerge=inputs=2[a]" -map 0:v -map "[a]" '
 

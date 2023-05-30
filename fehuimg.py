@@ -75,7 +75,7 @@ def replace_cache(files):
 
 
 def create_cache(New=False):
-    global cache_file, dirs_file
+    global cache_file, dirs_file, mount_point
     
     if New == True:
         cache_file = open(cache_file,'r+')
@@ -97,6 +97,8 @@ def create_cache(New=False):
     dirs = dirs.split(';')
     i=0
     while i<len(dirs):
+        if dirs[i].startswith(mount_point):
+            continue
         try: dirs[i]=dirs[i].split('#')[0].strip() # The comment in delete
         except: None
         print dirs[i]
@@ -163,10 +165,9 @@ def mount(mount_point,comments):
             if not os.path.exists(file):
                 continue
         except:
-            import pdb; pdb.set_trace()
             continue
 
-        if 'size' in globals().keys():
+        if 'size' in globals().keys():  # For --size option (for size filter)
             size=globals()['size']
             filesize = os.path.getsize(file)
             if size[2] == '>':
@@ -218,6 +219,9 @@ def mount(mount_point,comments):
         #-----Create HashTag directories and symlinks----------
         if comment != '':
             comment = comment.split(';')
+            if '#audio_only' in comment: # Replace the #audio_only tag with #audio
+                comment.remove('#audio_only')
+                comment.append('#audio')
             if all_dirs==False:
                 #---- Single symlink for one tag
                 for i in comment:
@@ -262,6 +266,30 @@ def mount(mount_point,comments):
     
 
 if __name__=='__main__':
+
+    # Get the mount_point information. It needs not only for mount but it needs for excepts mounted files from cacheing files and directories
+    if '-a' in sys.argv:
+        sys.argv.remove('-a')
+
+        all_dirs = True
+    else:
+        all_dirs = False
+
+    try:mount_point=sys.argv[sys.argv.index('-m')+1]
+    except:
+        try:
+            mount_point = open(conf_file,'r').read()
+            mount_point = mount_point[mount_point.find('mount_point'):]
+            if mount_point == None:
+                print 'File fehu.conf not contain the "mount_point" variable.'
+                mount_point = '/tmp/fehumedia/'
+            else:
+                mount_point = mount_point.split('=',1)[1].lstrip().split('\n')[0].rstrip()
+        except:
+            print 'File fehu.conf not exists'
+        
+        mount_point=mount_point.replace('~',home)
+
     if '-h' in sys.argv:
         print help
         exit(0)
@@ -277,6 +305,7 @@ if __name__=='__main__':
         replace_cache(sys.argv[i+1:])
         exit(0)
          
+    #import pdb; pdb.set_trace()
     if '-c' in sys.argv:
         sys.argv.remove('-c')
         try:os.remove(cache_file)
@@ -289,13 +318,6 @@ if __name__=='__main__':
         sys.argv.remove('-cn')
         create_cache(True)
         exit(0)
-
-    if '-a' in sys.argv:
-        sys.argv.remove('-a')
-
-        all_dirs = True
-    else:
-        all_dirs = False
 
     if '--size' in sys.argv:
         i = sys.argv.index('--size')
@@ -325,20 +347,6 @@ if __name__=='__main__':
         exit(1)
 
     if '-m' in sys.argv:
-        try:mount_point=sys.argv[sys.argv.index('-m')+1]
-        except:
-            try:
-                mount_point = open(conf_file,'r').read()
-                mount_point = mount_point[mount_point.find('mount_point'):]
-                if mount_point == None:
-                    print 'File fehu.conf not contain the "mount_point" variable.'
-                    mount_point = '/tmp/fehumedia/'
-                else:
-                    mount_point = mount_point.split('=',1)[1].lstrip().split('\n')[0].rstrip()
-            except:
-                print 'File fehu.conf not exists'
-        
-        mount_point=mount_point.replace('~',home)
         mount(mount_point, comments)
         exit(0)
 

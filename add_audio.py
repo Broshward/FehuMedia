@@ -12,8 +12,22 @@ usage='''
         --mix       mixing external audio source and audio from video
         --silent    Add the silent audio
         --ask-difficult-questions        Interactive mode.
+        --replace       Replace input file
+        --not-replace   Do not replace input file
 ''' %(sys.argv[0])
 
+def _nextnum(inputname):
+    try:outname=inputname.rsplit('.',1)
+    except:
+        import pdb;pdb.set_trace()
+    if os.path.exists(outname[0]+'.'+outname[1]):
+        num=1
+        while os.path.exists(outname[0]+'_%d.%s' %(num,outname[1])):
+            num+=1
+        outname = outname[0]+'_%d.%s' %(num,outname[1])
+    else:
+        outname = outname[0]+'.'+outname[1]
+    return outname
 
 def outvideoexists(outvideo):
     if os.path.exists(outvideo):
@@ -55,10 +69,22 @@ if '--ask-difficult-questions' in sys.argv:
     print "Insert audio file to add for videeo [Output of sound card is default]: ",
     audio_file = sys.stdin.readline().strip() 
 
+if '--replace' in sys.argv:
+    replace=True
+    sys.argv.remove('--replace')
+if '--not-replace' in sys.argv:
+    sys.argv.remove('--not-replace')
+    replace=False
+
 files = sys.argv[1:]
 
-print 'Replace input file(s)? (N or additions for create a copy) [Y/n]: ',
-ans = sys.stdin.readline().strip()
+if 'replace' not in globals():
+    print 'Replace input file(s)? (N or additions for create a copy) [Y/n]: ',
+    ans = sys.stdin.readline().strip()
+elif replace:
+    ans = 'y'
+else:
+    ans = 'n'
 
 if silent==True:
     audio_in = '-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100'
@@ -70,19 +96,14 @@ else:
 audio_out= '-c:a aac -shortest'
 mixing_audio = '-filter_complex "[0:a][1:a]amerge=inputs=2[a]" -map 0:v -map "[a]" '
 
-
 for i in files:
     i = os.path.realpath(i)
     outvideo_time=os.path.getmtime(i)
     if ans=='' or (ans in 'yYNn'):
-        outvideo=i.rsplit('/',1)[1].rsplit('.',1)
-        num=1
-        while os.path.exists(i.rsplit('/',1)[0]+'/'+outvideo[0]+'_%d.%s' %(num,outvideo[1])):
-            num+=1
-        outvideo = i.rsplit('/',1)[0]+'/'+outvideo[0]+'_%d.%s' %(num,outvideo[1])
+        outvideo=_nextnum(i)
     else:
-        outvideo=i.rsplit('/',1)[1].rsplit('.',1)
-        outvideo = i.rsplit('/',1)[0]+'/'+outvideo[0]+ans+outvideo[1]
+        outvideo=i.rsplit('.',1)
+        outvideo = outvideo[0]+'_'+ans+'.'+outvideo[1]
 
     cmd = 'ffmpeg -i %s ' %(i) # Video file is input
     if 'audio_file' in globals():

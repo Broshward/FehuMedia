@@ -26,11 +26,16 @@ def is_video(file):
     return file[1].rsplit('.',1)[1].lower() in videos
 
 def _nextnum(inputname):
-    outname=inputname.rsplit('/',1)[1].rsplit('.',1)
-    num=1
-    while os.path.exists(inputname.rsplit('/',1)[0]+'/'+outname[0]+'_%d.%s' %(num,outname[1])):
-        num+=1
-    outname = inputname.rsplit('/',1)[0]+'/'+outname[0]+'_%d.%s' %(num,outname[1])
+    try:outname=inputname.rsplit('.',1)
+    except:
+        import pdb;pdb.set_trace()
+    if os.path.exists(outname[0]+'.'+outname[1]):
+        num=1
+        while os.path.exists(outname[0]+'_%d.%s' %(num,outname[1])):
+            num+=1
+        outname = outname[0]+'_%d.%s' %(num,outname[1])
+    else:
+        outname = outname[0]+'.'+outname[1]
     return outname
 
 def expand_dirs(files):
@@ -150,6 +155,23 @@ if 'duration' in globals(): #
         if duration == '':
             duration=duration_pause_def
        
+# List of audio
+for v in files:
+    if is_video(v):
+        if '#audio_only' in os.popen('get_comment %s' %(v[1])).read():
+            if 'list_audio' not in globals():
+                list_audio = v[1]
+            else:
+                list_audio += ' '+v[1]
+#import pdb;pdb.set_trace()
+if 'list_audio' in globals():
+    if 'temp_dir' in globals():
+        audio = temp_dir + 'audio.aac'
+    else:
+        audio = 'audio.aac'
+    audio = _nextnum(audio)
+    cmd = 'concat_videos.py --audio-only -o %s ' %(audio)  +list_audio
+    os.system(cmd)
 
 i=0
 list_for_concat = []
@@ -159,7 +181,6 @@ while i<len(files):
         beg_img=i
         while (i<(len(files)-1)) and is_image(files[i+1]):
             i+=1
-                #import pdb;pdb.set_trace()
         # Creating slideshow from images
         # i is end of images for slideshow
         # beg_img is beg of images for slideshow
@@ -199,14 +220,13 @@ while i<len(files):
         #print '\n', cmd
         #if os.system(cmd):
         #    exit(-5)
-    elif is_video(files[i]):
+    elif is_video(files[i]) and (files[i][1] not in list_audio):
         if 'resolution' in globals():
             if int(resolution.split(':',1)[1]) != files[i][4]: # Scale needing
                 if 'temp_dir' in globals():
-                    outvideo = temp_dir + _nextnum(files[i][1]).rsplit('/',1)[1]
-                else:
-                    outvideo = _nextnum(files[i][1])
-                cmd = 'scale.py --not-replace --resolution %s %s' %(resolution,files[i][1])
+                    outvideo = temp_dir + files[i][1].rsplit('/',1)[1]
+                outvideo = _nextnum(outvideo)
+                cmd = 'scale.py -o %s --not-replace --resolution %s %s' %(outvideo, resolution,files[i][1])
                 if os.system(cmd):
                     exit(-6)
                 list_for_concat.append(outvideo)
@@ -225,6 +245,7 @@ while i<len(files):
 # Output video filename calculate
 if 'output_video' not in globals():
     output_video = files[0][1].rsplit('.',1)[0]+'_join.mp4' #Default output filename
+output_video = _nextnum(output_video)
 
 # Concatenate parts
 cmd = 'concat_videos.py --crossing-add '
@@ -236,6 +257,10 @@ cmd += '-o %s %s' %(output_video, ' '.join(list_for_concat))
 print cmd
 os.system(cmd)
 
+if 'audio' in globals():
+    os.system('add_audio.py --not-replace --mix -f %s %s' %(audio,output_video))
+
 # Remove temporarily files
 for i in temp_files:
     os.remove(i)
+os.remove(audio)

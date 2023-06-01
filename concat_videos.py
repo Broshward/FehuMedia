@@ -9,6 +9,7 @@ usage='''
         -o filename     Output video filename
         --temp-dir temp_dir         When launchs program in tmpfs, temporarily files volume may be too large and it will have make the "No space left" error. --temp-dir option will be create temporarily files in the temp_dir directory
         --crossing-add  Add fluent crossing between videos.
+        --audio-only    Only audio streams coping to output
 ''' %(sys.argv[0])
 
 if '--help' in sys.argv:
@@ -33,9 +34,14 @@ if '--temp-dir' in sys.argv:
     sys.argv.pop(sys.argv.index('--temp-dir')+1)
     sys.argv.pop(sys.argv.index('--temp-dir'))
 
+if '--audio-only' in sys.argv:
+    audio_only = True
+    sys.argv.remove('--audio-only')
+else:
+    audio_only = False
 
 if '-o' in sys.argv:
-    outvideo = sys.argv[sys.argv.index('-o')+1]
+    output_video = sys.argv[sys.argv.index('-o')+1]
     sys.argv.pop(sys.argv.index('-o')+1)
     sys.argv.pop(sys.argv.index('-o'))
 
@@ -103,7 +109,10 @@ for i in range(len(list_names)):
         
 
 concat_str='concat:'+'|'.join(ts_list)
-cmd = "ffmpeg -i '%s' -c copy -y %s" %(concat_str,output_video)
+if audio_only:
+    cmd = "ffmpeg -i '%s' -c:v none -c:a copy -y %s" %(concat_str,output_video)
+else:
+    cmd = "ffmpeg -i '%s' -c copy -y %s" %(concat_str,output_video)
 print cmd
 os.system(cmd)
 for i in ts_list:

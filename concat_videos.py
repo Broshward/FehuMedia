@@ -110,7 +110,7 @@ for i in range(len(list_names)):
 
 concat_str='concat:'+'|'.join(ts_list)
 if audio_only:
-    cmd = "ffmpeg -i '%s' -c:v none -c:a copy -y %s" %(concat_str,output_video)
+    cmd = "ffmpeg -i '%s' -y %s" %(concat_str,output_video)
 else:
     cmd = "ffmpeg -i '%s' -c copy -y %s" %(concat_str,output_video)
 print cmd

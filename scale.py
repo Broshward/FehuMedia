@@ -16,17 +16,18 @@ usage='''
 resolution='-1:720' #The default value
 
 def _nextnum(inputname):
-    try:outname=inputname.rsplit('/',1)[1].rsplit('.',1)
+    try:outname=inputname.rsplit('.',1)
     except:
         import pdb;pdb.set_trace()
     if os.path.exists(outname[0]+'.'+outname[1]):
         num=1
-        while os.path.exists(inputname.rsplit('/',1)[0]+'/'+outname[0]+'_%d.%s' %(num,outname[1])):
+        while os.path.exists(outname[0]+'_%d.%s' %(num,outname[1])):
             num+=1
-        outname = inputname.rsplit('/',1)[0]+'/'+outname[0]+'_%d.%s' %(num,outname[1])
+        outname = outname[0]+'_%d.%s' %(num,outname[1])
     else:
         outname = outname[0]+'.'+outname[1]
     return outname
+
 
 def outvideoexists(outvideo):
     if os.path.exists(outvideo):

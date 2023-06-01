@@ -172,6 +172,13 @@ if 'list_audio' in globals():
     audio = _nextnum(audio)
     cmd = 'concat_videos.py --audio-only -o %s ' %(audio)  +list_audio
     os.system(cmd)
+    # Remove #audio_only files from file list
+    i=0
+    while i<len(files):
+        if files[i][1] in list_audio:
+            files.pop(i)
+            continue
+        i+=1
 
 i=0
 list_for_concat = []
@@ -220,7 +227,7 @@ while i<len(files):
         #print '\n', cmd
         #if os.system(cmd):
         #    exit(-5)
-    elif is_video(files[i]) and (files[i][1] not in list_audio):
+    elif is_video(files[i]):
         if 'resolution' in globals():
             if int(resolution.split(':',1)[1]) != files[i][4]: # Scale needing
                 if 'temp_dir' in globals():
@@ -259,8 +266,8 @@ os.system(cmd)
 
 if 'audio' in globals():
     os.system('add_audio.py --not-replace --mix -f %s %s' %(audio,output_video))
+    os.remove(audio)
 
 # Remove temporarily files
 for i in temp_files:
     os.remove(i)
-os.remove(audio)

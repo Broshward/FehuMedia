@@ -155,21 +155,20 @@ while i < len(files):
             #os.symlink(files[i],temporarydir+'/'+str(os.stat(files[i]).st_mtime_ns)) #For  python3 translating
             try:os.symlink(files[i],symlink_name)
             except:print symlink_name
+        if (i+1) == len(files):break
+        size=os.popen('identify -ping -format %%h %s' %(files[i+1])).read() #Height of first frame
+        size2=os.popen('identify -ping -format %%h %s' %(files[i]  )).read() #Height of second frame
+        if size2<size:
+            size=size2
         for j in range(int(pause*framerate)): # Make pause crossing (adding temporary crosing files to symlinks)
-            if (i+1) == len(files):break
             print 'Make pause crossing images: ',j
             percentage = j*100/(pause*framerate)
             filename=temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+int(duration*framerate+1)+j)+'.'+files[i].rsplit('.',1)[1].lower()
-            size1=os.popen('identify -ping -format %%h %s' %(files[i+1])).read()
-            size2=os.popen('identify -ping -format %%h %s' %(files[i]  )).read() 
-            if size1<size2:
-                os.system('composite -blend %s -gravity Center %s -resize x%s %s %s' %(percentage,files[i+1], size1 ,files[i],filename))
-            elif size2<size1:
-                os.system('composite -blend %s -gravity Center -resize x%s %s %s %s' %(percentage, size2, files[i+1], files[i],filename))
-            else:
-                os.system('composite -blend %s -gravity Center %s %s %s' %(percentage,files[i+1],files[i],filename))
-        #import pdb;pdb.set_trace()
+            cmd='composite -blend %s -gravity Center -resize x%s %s -resize x%s %s %s' %(percentage,size, files[i+1], size ,files[i],filename)
+            #print cmd
+            os.system(cmd)
         i+=1
+#import pdb;pdb.set_trace()
 
 if 'audio_file' in globals():
     audio_in = '-stream_loop -1 -i %s' %(audio_file)

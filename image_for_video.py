@@ -141,7 +141,6 @@ while i < len(files):
         files.pop(i)
         i-=j
     else: # files[i] is file or symlink
-        #import pdb;pdb.set_trace()
 
         for j in range(int(duration*framerate+1)): # Make the slide
             symlink_name = temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+j)+'.'+files[i].rsplit('.',1)[1].lower()
@@ -161,7 +160,15 @@ while i < len(files):
             print 'Make pause crossing images: ',j
             percentage = j*100/(pause*framerate)
             filename=temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+int(duration*framerate+1)+j)+'.'+files[i].rsplit('.',1)[1].lower()
-            os.system('composite -blend %s -gravity South %s %s %s' %(percentage,files[i+1],files[i],filename))
+            size1=os.popen('identify -ping -format %%h %s' %(files[i+1])).read()
+            size2=os.popen('identify -ping -format %%h %s' %(files[i]  )).read() 
+            if size1<size2:
+                os.system('composite -blend %s -gravity Center %s -resize x%s %s %s' %(percentage,files[i+1], size1 ,files[i],filename))
+            elif size2<size1:
+                os.system('composite -blend %s -gravity Center -resize x%s %s %s %s' %(percentage, size2, files[i+1], files[i],filename))
+            else:
+                os.system('composite -blend %s -gravity Center %s %s %s' %(percentage,files[i+1],files[i],filename))
+        #import pdb;pdb.set_trace()
         i+=1
 
 if 'audio_file' in globals():

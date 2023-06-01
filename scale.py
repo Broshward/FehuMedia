@@ -7,6 +7,7 @@
 import sys,os,time
 usage='''
     usage: %s [--show] [-r] path/to/video/files
+        -o filename     Output file name
         --show          for show without file save
         --resolution    output resolution
         --replace       Replace input file
@@ -15,11 +16,16 @@ usage='''
 resolution='-1:720' #The default value
 
 def _nextnum(inputname):
-    outname=inputname.rsplit('/',1)[1].rsplit('.',1)
-    num=1
-    while os.path.exists(inputname.rsplit('/',1)[0]+'/'+outname[0]+'_%d.%s' %(num,outname[1])):
-        num+=1
-    outname = i.rsplit('/',1)[0]+'/'+outname[0]+'_%d.%s' %(num,outname[1])
+    try:outname=inputname.rsplit('/',1)[1].rsplit('.',1)
+    except:
+        import pdb;pdb.set_trace()
+    if os.path.exists(outname[0]+'.'+outname[1]):
+        num=1
+        while os.path.exists(inputname.rsplit('/',1)[0]+'/'+outname[0]+'_%d.%s' %(num,outname[1])):
+            num+=1
+        outname = inputname.rsplit('/',1)[0]+'/'+outname[0]+'_%d.%s' %(num,outname[1])
+    else:
+        outname = outname[0]+'.'+outname[1]
     return outname
 
 def outvideoexists(outvideo):
@@ -37,6 +43,11 @@ def outvideoexists(outvideo):
         else:
             outvideo = ans
     return outvideo
+
+if '-o' in sys.argv:
+    outvideo = sys.argv[sys.argv.index('-o')+1]
+    sys.argv.pop(sys.argv.index('-o')+1)
+    sys.argv.pop(sys.argv.index('-o'))
 
 if '--show' in sys.argv:
     sys.argv.remove('--show')
@@ -72,11 +83,12 @@ else:
 
 for i in files:
     outvideo_time=os.path.getmtime(i)
-    if ans=='' or (ans in 'yYNn'):
-        outvideo = _nextnum(i)
-    else:
-        outvideo=i.rsplit('/',1)[1].rsplit('.',1)
-        outvideo = i.rsplit('/',1)[0]+'/'+outvideo[0]+ans+outvideo[1]
+    if 'outvideo' not in globals():
+        if ans=='' or (ans in 'yYNn'):
+            outvideo = _nextnum(i)
+        else:
+            outvideo=i.rsplit('/',1)[1].rsplit('.',1)
+            outvideo = i.rsplit('/',1)[0]+'/'+outvideo[0]+ans+outvideo[1]
 
     if show:
         cmd="ffplay -fs -vf scale=%s %s" %(resolution,i)

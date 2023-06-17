@@ -1,0 +1,3 @@
+#!/usr/bin/bash
+#Generate text_image
+convert -background Black -fill green -size 1620x2160 -gravity Center -pointsize 300 label:192000x DSCN0543.JPG_6e.jpg

@@ -18,9 +18,9 @@ usage: image_for_video.py [ file1 file2 ... fileN ] [ dir1 dir2 ... dirN ]
 temporarydir='/tmp/temp'
 framerate_default = 10
 duration_pause_def = '2,1'
-resolution = '-1:1080'
-resolution = '1920:-1'
-resolution = '-1:2160'
+resolution = '-2:1080'
+resolution = '1920:-2'
+resolution = '-2:2160'
 
 if not temporarydir.endswith('/'):
     temporarydir += '/'
@@ -41,6 +41,15 @@ def outvideoexists(outvideo):
         else:
             outvideo = ans
     return outvideo
+
+def sort_time(l):
+    times=[]
+    for i in l:
+        times.append([os.path.getmtime(i),i])
+    times.sort()
+    for i in range(len(times)):
+        l[i] = times[i][1]
+    return l
 
 if os.path.exists(temporarydir):
     if not os.path.isdir(temporarydir):
@@ -126,7 +135,6 @@ if 'outvideo' not in globals():
         outvideo = outvideo.rsplit('.',1)
         outvideo = outvideo[0]+'_slide.'+outvideo[1]
 
-files.sort()
 i=0
 while i < len(files):
     #import pdb;pdb.set_trace()
@@ -140,21 +148,27 @@ while i < len(files):
         j=len(os.listdir(files[i]))
         files.pop(i)
         i-=j
-    else: # files[i] is file or symlink
+    #else: # files[i] is file or symlink
+    i+=1
 
-        for j in range(int(duration*framerate+1)): # Make the slide
-            symlink_name = temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+j)+'.'+files[i].rsplit('.',1)[1].lower()
-            if os.path.exists(symlink_name):
-                print 'It is possible if you makes art for example :))'
-                if 'art_power' not in locals():
-                    art_power=1 # Counter for change link name
-                else:
-                    art_power+=1
-                symlink_name = temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+j+art_power)+'.'+files[i].rsplit('.',1)[1].lower()
-                #exit(-110)
-            #os.symlink(files[i],temporarydir+'/'+str(os.stat(files[i]).st_mtime_ns)) #For  python3 translating
-            try:os.symlink(files[i],symlink_name)
-            except:print symlink_name
+files = sort_time(files)
+
+i=0
+while i < len(files):
+    for j in range(int(duration*framerate+1)): # Make the slide
+        symlink_name = temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+j)+'.'+files[i].rsplit('.',1)[1].lower()
+        if os.path.exists(symlink_name):
+            print 'It is possible if you makes art for example :))'
+            if 'art_power' not in locals():
+                art_power=1 # Counter for change link name
+            else:
+                art_power+=1
+            symlink_name = temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+j+art_power)+'.'+files[i].rsplit('.',1)[1].lower()
+            #exit(-110)
+        #os.symlink(files[i],temporarydir+'/'+str(os.stat(files[i]).st_mtime_ns)) #For  python3 translating
+        try:os.symlink(files[i],symlink_name)
+        except:print symlink_name
+    if slideshow:
         if (i+1) == len(files):break
         size=os.popen('identify -ping -format %%h %s' %(files[i+1])).read() #Height of first frame
         size2=os.popen('identify -ping -format %%h %s' %(files[i]  )).read() #Height of second frame
@@ -167,8 +181,7 @@ while i < len(files):
             cmd='composite -blend %s -gravity Center -resize x%s %s -resize x%s %s %s' %(percentage,size, files[i+1], size ,files[i],filename)
             #print cmd
             os.system(cmd)
-        i+=1
-#import pdb;pdb.set_trace()
+    i+=1
 
 if 'audio_file' in globals():
     audio_in = '-stream_loop -1 -i %s' %(audio_file)

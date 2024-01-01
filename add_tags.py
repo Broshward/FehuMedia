@@ -28,7 +28,9 @@ img_time=os.path.getmtime(filename)
 #exiv2 -M'set Exif.Photo.UserComment '$comment_str $1
 #exiv2 -c $comment_str $1
 #ffmpeg -i $1 -c copy -metadata Comment=$comment_str out_$1
+print filename.rsplit('/',1)[1],'    ',comment 
 cmd='/usr/bin/vendor_perl/exiftool -overwrite_original %s -UserComment=\'%s\'' %(filename,comment)
+#print cmd
 os.system(cmd)
 #print os.popen(cmd).read()
 #/usr/bin/vendor_perl/exiftool -Comment=$comment_str $1

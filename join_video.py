@@ -20,10 +20,10 @@ images='jpg,png'
 videos='mov,mp4'
 
 def is_image(file):
-    return file[1].rsplit('.',1)[1].lower() in images
+    return file.rsplit('.',1)[1].lower() in images
 
 def is_video(file):
-    return file[1].rsplit('.',1)[1].lower() in videos
+    return file.rsplit('.',1)[1].lower() in videos
 
 def _nextnum(inputname):
     try:outname=inputname.rsplit('.',1)
@@ -55,7 +55,6 @@ def expand_dirs(files):
 
 
 
-
 if '--help' in sys.argv:
     print usage
     exit(0)
@@ -76,6 +75,10 @@ if '-o' in sys.argv:
     output_video = sys.argv[sys.argv.index('-o')+1]
     sys.argv.pop(sys.argv.index('-o')+1)
     sys.argv.pop(sys.argv.index('-o'))
+    if not is_video(output_video):
+        print 'Output filename is not a video. Change this'
+        #import pdb;pdb.set_trace()
+        exit(-10)
 
 if '--resolution' in sys.argv:
     resolution = sys.argv[sys.argv.index('--resolution')+1]
@@ -157,7 +160,7 @@ if 'duration' in globals(): #
        
 # List of audio
 for v in files:
-    if is_video(v):
+    if is_video(v[1]):
         if '#audio_only' in os.popen('get_comment %s' %(v[1])).read():
             if 'list_audio' not in globals():
                 list_audio = v[1]
@@ -184,9 +187,9 @@ i=0
 list_for_concat = []
 temp_files = []
 while i<len(files):
-    if is_image(files[i]):
+    if is_image(files[i][1]):
         beg_img=i
-        while (i<(len(files)-1)) and is_image(files[i+1]):
+        while (i<(len(files)-1)) and is_image(files[i+1][1]):
             i+=1
         # Creating slideshow from images
         # i is end of images for slideshow
@@ -197,10 +200,9 @@ while i<len(files):
             outvideo = files[beg_img][1]+'.mp4'
         list_for_concat.append(outvideo)
         temp_files.append(outvideo)
-        cmd = 'image_for_video.py --framerate 10 '
+        cmd = 'image_for_video.py --slideshow --framerate 10 '
         if 'resolution' in globals():
             cmd += '--resolution %s ' %(resolution)
-        cmd += '--slideshow '
         if 'duration' in globals():
             cmd += '--duration %s ' %(duration)
         else:
@@ -213,10 +215,14 @@ while i<len(files):
                #     cur_audio = files[i-1][1]
                # else: #Need to find first video file
                 for v in files:
-                    if is_video(v):
+                    if is_video(v[1]):
                         cur_audio=v[1]
                         break
-            cmd += ' -a %s ' %(cur_audio)
+            if 'cur_audio' not in globals(): # If nothing video or audio in files
+                print "Insert audio file to add to video [None]: ",
+                cur_audio = sys.stdin.readline().strip() 
+            if cur_audio != '':
+                cmd += ' -a %s ' %(cur_audio)
 
         print '\n',cmd
         if os.system(cmd):
@@ -227,7 +233,7 @@ while i<len(files):
         #print '\n', cmd
         #if os.system(cmd):
         #    exit(-5)
-    elif is_video(files[i]):
+    elif is_video(files[i][1]):
         if 'resolution' in globals():
             if int(resolution.split(':',1)[1]) != files[i][4]: # Scale needing
                 if 'temp_dir' in globals():
@@ -254,6 +260,7 @@ if 'output_video' not in globals():
     output_video = files[0][1].rsplit('.',1)[0]+'_join.mp4' #Default output filename
 output_video = _nextnum(output_video)
 
+#import pdb;pdb.set_trace()
 # Concatenate parts
 cmd = 'concat_videos.py --crossing-add '
 if 'temp_dir' in globals():

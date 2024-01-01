@@ -68,8 +68,13 @@ if '-r' in sys.argv:
 else:
     output_rate = ''
   
-if '--times-tempos' in sys.argv:
-    r_index=sys.argv.index('--times-tempos')
+if '--ask-difficult-questions' in sys.argv:
+    ask = True
+else:
+    ask=False
+
+if '--tempos-file' in sys.argv:
+    r_index=sys.argv.index('--tempos-file')
     times_rates_file = sys.argv[r_index+1]
     sys.argv.pop(r_index)
     sys.argv.pop(r_index)
@@ -99,6 +104,7 @@ if len(sys.argv)==0:
     exit(-1)
 elif len(sys.argv)>1:
     print "Too many argiments given! Please read the help with -h option."
+    import pdb; pdb.set_trace()
 
 input_video = sys.argv[0]
 if not os.path.exists(input_video):
@@ -119,7 +125,6 @@ if 'fps' in info: # File is video
 
 outvideo_time=os.path.getmtime(input_video)
 
-#import pdb; pdb.set_trace()
 # Output video filename calculate
 if 'output_video' not in globals():
     output_video = input_video.rsplit('.',1)[0]+'_tempo' #Default output filename
@@ -141,6 +146,9 @@ if 'all_tempo' in globals():
 
 if 'times_rates_file' not in globals():
     times_rates_file = input_video.rsplit('.',1)[0]+'_tempos' #Default times and tempos filename
+if ask:
+    print "Insert tempos_file name please: " %(times_rates_file),
+    times_rates_file=sys.stdin.readline().strip()   
 
 # If times_rates_file not exists we need create this. 
 if not os.path.exists(times_rates_file):

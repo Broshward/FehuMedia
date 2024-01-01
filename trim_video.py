@@ -20,11 +20,12 @@ ans = sys.stdin.readline().strip()
 if ans=='' or ans=='end':
     t='end'
 else:
-    t=ans
-print 'Output file is exist. Replace this?[y/N],'
+    t=str(float(ans)-float(ss))
+print 'Output file is exist. Replace this?[Y/n],'
 ans = sys.stdin.readline().strip()
 
 for i in files:
+    comment=os.popen("get_comment %s" % (i)).read()
     outvideo_time=os.path.getmtime(i)
     if ans=='' or ans in 'yYNn':
         outvideo=i.rsplit('/',1)[1].rsplit('.',1)
@@ -44,9 +45,11 @@ for i in files:
     if os.system(cmd) != 0:
         exit(-1)
 
+    cmd='/usr/bin/vendor_perl/exiftool -overwrite_original %s -UserComment=\'%s\'' %(outvideo,comment)
+    os.system(cmd)
     os.utime(outvideo, (outvideo_time,outvideo_time))
 
-    if ans=='y' or ans=='Y':
+    if ans=='y' or ans=='Y' or ans=='':
         cmd = 'mv %s %s' %(outvideo,i) 
         print cmd
         os.system(cmd)

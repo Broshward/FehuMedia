@@ -68,11 +68,15 @@ if sort=='time':
 if 'output_video' not in globals():
     output_video = list_names[0].rsplit('.',1)[0]+'_concat.'+list_names[0].rsplit('.',1)[1] #Default output filename
 
+comments= []
 ts_list=[]
 for i in range(len(list_names)):
+    comment=os.popen("get_comment %s" % (list_names[i])).read()
+    if "User Comment" in comment: # For JPEG, else for videos
+        comment = comment.split(':',1)[1].strip()
+    comments.append(comment)
     if 'crossing' in globals():
         if crossing == True:
-            #import pdb;pdb.set_trace()
             if i==0:
                 #get last image
                 os.system('ffmpeg -sseof -1 -i %s -vframes 1 -q:v 1 -qmin 1 -update 1 %s ' %(list_names[i], list_names[i]+'_last.jpg'))
@@ -115,7 +119,20 @@ else:
     cmd = "ffmpeg -i '%s' -c copy -y %s" %(concat_str,output_video)
 print cmd
 os.system(cmd)
-for i in ts_list:
+
+#import pdb;pdb.set_trace()
+tags=[]
+for comment in comments:
+    for tag in comment.split(';'):
+        if tag not in tags:
+            tags.append(tag)
+comment=';'.join(tags)
+
+cmd='/usr/bin/vendor_perl/exiftool -overwrite_original %s -UserComment=\'%s\'' %(output_video,comment)
+print cmd
+os.system(cmd)
+
+for i in ts_list: #Remove temporalily files
     os.remove(i)
 
 os.utime(output_video, (times[-1][0],times[-1][0]))

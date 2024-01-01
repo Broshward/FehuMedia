@@ -154,6 +154,7 @@ while i < len(files):
 files = sort_time(files)
 
 i=0
+comments= []
 while i < len(files):
     for j in range(int(duration*framerate+1)): # Make the slide
         symlink_name = temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+j)+'.'+files[i].rsplit('.',1)[1].lower()
@@ -169,6 +170,10 @@ while i < len(files):
         try:os.symlink(files[i],symlink_name)
         except:print symlink_name
     if slideshow:
+        comment=os.popen("get_comment %s" % (files[i])).read()
+        if "User Comment" in comment: # For JPEG, else for videos
+            comment = comment.split(':',1)[1].strip()
+        comments.append(comment)
         if (i+1) == len(files):break
         size=os.popen('identify -ping -format %%h %s' %(files[i+1])).read() #Height of first frame
         size2=os.popen('identify -ping -format %%h %s' %(files[i]  )).read() #Height of second frame
@@ -198,7 +203,19 @@ cmd="ffmpeg %s -framerate %s -pattern_type glob -i '%s/*.jpg' -map 0:a -map 1:v 
 print cmd
 os.system(cmd)
 os.system('mv %s %s' %('/tmp/'+outvideo.rsplit('/',1)[1],outvideo))
-os.utime(outvideo, (outvideo_time,outvideo_time))
+
+tags=[]
+for comment in comments:
+    for tag in comment.split(';'):
+        if tag not in tags:
+            tags.append(tag)
+comment=';'.join(tags)
+
+cmd='/usr/bin/vendor_perl/exiftool -overwrite_original %s -UserComment=\'%s\'' %(outvideo,comment)
+print cmd
+os.system(cmd)
+
 os.system('rm -rf %s' %(temporarydir))
+os.utime(outvideo, (outvideo_time,outvideo_time))
 
 

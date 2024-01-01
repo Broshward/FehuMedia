@@ -3,14 +3,20 @@
 #ffplay -fs -vf eq=saturation=2.5 178INTVL.mp4    Example of preview saturation change
 #ffmpeg -i INPUT.MOV -vf eq=saturation=2.5 -c:a copy OUTPUT.MOV   Example of reconvert saturation change
 #convert DSCN0426.JPG -modulate 100,200  out.jpg        Example of change saturation of jpeg sources.
+# -vf crop=out_w:out_h:x:y  Example for crop video
+# -vf crop=in_w/2:in_h/2  Example for crop video 2 times to center
+# -vf rotate=PI     Rotate 180 degree
+# -af volume=0.5          Example of volume regulation
+# -filter:a "volume=0.5"
+# -vf scale=ih/iw,setsar=1  Change aspect ratio 
 
 import sys,os,time
 
 usage='''
-    usage: saturation.py [--show] path/to/video/files
+    usage: %s [--show] path/to/video/files
         --show              for show without file save
         -s command_string   filters command string
-'''
+''' %(sys.argv[0])
 
 command_string = '-af "afftdn=nr=15:nf=-25:tn=1, loudnorm" '# Audio noise reducing and normalize volume
 
@@ -54,13 +60,13 @@ for i in files:
         outvideo = i.rsplit('/',1)[0]+'/'+outvideo[0]+ans+'.'+outvideo[1]
 
     #import pdb;pdb.set_trace()
-    if outvideo.rsplit('.',)[1].lower() in 'jpg,jpe,png,tiff,jpeg,bmp': #for images
-        None
-    else: # for video
-        if show:
-            cmd="ffplay -fs %s %s" %(command_string,i)
-        else:
-            cmd="ffmpeg -i %s %s -qscale:v 1 -qmin 1 %s" %(i,command_string,outvideo)
+    #if outvideo.rsplit('.',)[1].lower() in 'jpg,jpe,png,tiff,jpeg,bmp': #for images
+    #    None
+    #else: # for video
+    if show:
+        cmd="ffplay -fs %s %s" %(command_string,i)
+    else:
+        cmd="ffmpeg -i %s %s -qscale:v 1 -qmin 1 %s" %(i,command_string,outvideo)
     print cmd
     if os.system(cmd) != 0:
         exit(-1)

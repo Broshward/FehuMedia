@@ -14,9 +14,9 @@ Options:
     
     -q          Do not write to stdout.
 
-    -cn         Create new. It is likewise -c option, but if file is present in cache, it ignoring one.
+    -cn         Create new in cache. Add new files in media directories to cache. It is likewise -c option, but if file is present in cache, it ignoring one.
 
-    -r filename Replace cache record for filename file with new values.
+    -r filename Replace cache record for filename file with new values. If this file not in cache it add filename to cache
 
     -m Mount fehumedia filesystem. The /mount/point must be after "-m" option or in fehu.conf file as mount variable/. Else default mount point (/tmp/fehumedia) will be selected.
     -a All_dirs. Mount all directories recursively.
@@ -24,6 +24,8 @@ Options:
     --size size This option for -m mount command. The size argument allows prefer idenifier as '>' '<' and '=' and 'M', 'k' suffix.
                 Example: 
                     --size >10M  - mount files with size only more 10 Mbytes.
+
+    --file-time This option use for mount and create links with himself file time instead media time(time of jpeg or movie)
 
 
     pattern is regexp of searching file comment part.
@@ -51,8 +53,12 @@ def gen_cache_string(filepath):
         comment = comment.split(':',1)[1].strip()
     #if comment=='':
     #    continue
-    date = os.popen('get_date %s' %(filepath)).read().strip()
-    if date=='-':
+
+    if FileTime:
+        date = os.popen('get_date %s' %(filepath)).read().strip() # !Option: it for media time instead file time priority
+        if date=='-':
+            date = os.popen('date_of_file %s' %(filepath)).read().strip()
+    else:
         date = os.popen('date_of_file %s' %(filepath)).read().strip()
     
     return filepath+'\t'+date+'\t'+comment+'\n'
@@ -275,20 +281,13 @@ if __name__=='__main__':
     else:
         all_dirs = False
 
-    try:mount_point=sys.argv[sys.argv.index('-m')+1]
-    except:
-        try:
-            mount_point = open(conf_file,'r').read()
-            mount_point = mount_point[mount_point.find('mount_point'):]
-            if mount_point == None:
-                print 'File fehu.conf not contain the "mount_point" variable.'
-                mount_point = '/tmp/fehumedia/'
-            else:
-                mount_point = mount_point.split('=',1)[1].lstrip().split('\n')[0].rstrip()
-        except:
-            print 'File fehu.conf not exists'
-        
-        mount_point=mount_point.replace('~',home)
+
+    #import pdb; pdb.set_trace()
+    if '--file-time' in sys.argv:
+        sys.argv.remove('--file-time')
+        FileTime = True
+    else:
+        FileTime = False
 
     if '-h' in sys.argv:
         print help
@@ -305,7 +304,21 @@ if __name__=='__main__':
         replace_cache(sys.argv[i+1:])
         exit(0)
          
-    #import pdb; pdb.set_trace()
+    try:mount_point=sys.argv[sys.argv.index('-m')+1]
+    except:
+        try:
+            mount_point = open(conf_file,'r').read()
+            mount_point = mount_point[mount_point.find('mount_point'):]
+            if mount_point == None:
+                print 'File fehu.conf not contain the "mount_point" variable.'
+                mount_point = '/tmp/fehumedia/'
+            else:
+                mount_point = mount_point.split('=',1)[1].lstrip().split('\n')[0].rstrip()
+        except:
+            print 'File fehu.conf not exists'
+        
+        mount_point=mount_point.replace('~',home)
+
     if '-c' in sys.argv:
         sys.argv.remove('-c')
         try:os.remove(cache_file)

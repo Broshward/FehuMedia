@@ -22,7 +22,7 @@ if comment.strip()!='':
         elif i in comment: # this tag in end of comment
             comment = comment.replace('#'+i,'')
         else:
-            print 'This file consider no "%s" tag!'
+            print 'This file have no "%s" tag!' 
 else:
     print 'This file consider no comment, nothing to do'
     exit(-1)

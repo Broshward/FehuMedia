@@ -68,6 +68,14 @@ if '--ask-difficult-questions' in sys.argv:
     sys.argv.pop(sys.argv.index('--ask-difficult-questions'))
     print "Insert audio file to add for videeo [Output of sound card is default]: ",
     audio_file = sys.stdin.readline().strip() 
+    if '|' in audio_file:
+        #import pdb;pdb.set_trace()
+        list_audio = audio_file.replace('|',' ')
+        temp_audio = audio_file.split('|')[0]+'.aac'
+        audio_file = temp_audio
+        cmd = 'concat_videos.py --audio-only -o %s ' %(audio_file) +list_audio
+        os.system(cmd)
+
 
 if '--replace' in sys.argv:
     replace=True
@@ -129,3 +137,7 @@ for i in files:
         cmd = 'mv %s %s' %(outvideo,i) 
         print cmd
         os.system(cmd)
+
+if 'temp_audio' in globals():
+    os.remove(temp_audio)
+

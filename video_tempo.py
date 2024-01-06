@@ -43,16 +43,18 @@ Options:
     --without-concat            Splitting and temporing file and no concat parts
 """
 
-tempos_template = '''#Format string: FirstTime-LastTime,Tempo
+tempos_template = '''
+#Format string: [FirstTime-]LastTime|end,Tempo
 # if only LastTime given, the FirstTime take from LastTime of previous line
-# end - the end of video
-# 'lost' is constant for frequently usage tempos
+# 'end' - the end of video
+# Variables are too supported, see for example bellow
 # 'copy' is equvalent to 1, but it without video reconversion (for faster perfomance)
-0-1,1
-1-2,1
-3,copy
-end,lost
-lost,copy
+
+#lost=100
+0-19,speed=1
+20,speed=speed*1.5
+#30,speed=speed*1.5
+#end,lost
 '''
 
 import sys,os
@@ -164,26 +166,49 @@ for i in open(times_rates_file).readlines():
         continue
     if i.strip().startswith('#'):
         continue
-    times,tempo = i.strip().split(',')
-    if times=='lost':
-        lost_tempo = tempo
-        continue
-    elif '-' in times:
-        BeginTime,EndTime=times.split('-')
+    if '#' in i:
+        i=i[:i.find('#'):]
+
+    if ',' in i:
+        time,tempo = i.strip().split(',')
+    else: 
+        time=i
+        tempo = None
+    
+    if '-' in time:
+        times=time.split('-')
     else:
-        BeginTime = EndTime 
-        EndTime = times
-    times_rates.append([BeginTime,EndTime,tempo])
+        if 'times' in globals().keys():
+            times = [times[1],time] # The begin time is end of last part
+        if '=' in time:
+            exec(time)
+            times[1]=time.split('=',1)[0]
+        else:
+            times[1]=time
+    
+    for i in [0,1]:
+        if type(times[i]) == str:
+            if times[i] != 'end':
+                times[i]=eval(times[i])
+
+    if tempo == None:
+        continue
+    if '=' in tempo:
+        exec(tempo)
+        if 'duration' in tempo:
+            tempo = (times[1]-times[0]) / eval(tempo.split('=',1)[0])
+        tempo=eval(tempo.split('=',1)[0])
+    else:
+        tempo = eval(tempo)
+
+    times_rates.append([times[0],times[1],tempo])
 
 #spliting and rating video
 list_filenames=''
 name=0
 for i in times_rates:
     print i
-    if i[2]=='lost':
-        i[2]=lost_tempo
-    i[0]=float(i[0])
-    temp_name = '%02d.%s' %(name, output_video.rsplit('.',1)[1])
+    temp_name = '%03d.%s' %(name, output_video.rsplit('.',1)[1])  
     if i[2]=='copy' and input_video.rsplit('.',1)[1] == output_video.rsplit('.',1)[1]:
         cmd = 'ffmpeg -i %s -c copy -ss %f -t -y %s' %(input_video, i[0], temp_name)
         cmd = cmd.replace('-t','' if i[1]=='end' else '-t %f' %(float(i[1])-i[0]))
@@ -229,7 +254,7 @@ print cmd
 if os.system(cmd)!=0:
     exit(-127)
 
-os.system('mv 00_concat.%s %s' %(output_video.rsplit('.',1)[1],output_video))
+os.system('mv 000_concat.%s %s' %(output_video.rsplit('.',1)[1],output_video))
 
 # -- This need to add in the all utils which worked with media
 cmd='/usr/bin/vendor_perl/exiftool -overwrite_original %s -UserComment=\'%s\'' %(output_video,comment)

@@ -4,12 +4,18 @@
 
 import sys,os
 
+if '--debug' in sys.argv:
+    sys.argv.remove('--debug')
+    debug=True
+else:
+    debug=False
+
 filename=sys.argv[1]
 filename = os.path.realpath(filename)
 
 data=os.popen('/usr/bin/vendor_perl/exiftool -g2 %s ' %(filename)).read()
 
-print 'Image:'
+print 'Media:'
 param='File Name'
 print data[data.find(param):].split('\n',1)[0]
 param='File Size'
@@ -44,4 +50,17 @@ print data[data.find(param):].split('\n',1)[0]
 print 'Audio:'
 param='Hyperfocal Distance'
 print data[data.find(param):].split('\n',1)[0]
+
+print 'Comment:'
+comment=os.popen("get_comment %s" % (filename)).read()
+print comment
+print
+
+if debug:
+    print 'All exif data:'
+    print data
+    print 'ffmpeg info:'
+    info=os.popen("ffmpeg -i %s 2>&1 "%(filename)).read()
+    print info[info.find('Input #'):]
+
 

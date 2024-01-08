@@ -134,13 +134,11 @@ if 'output_video' not in globals():
 if '.' not in output_video:
     output_video += '.'+input_video.rsplit('.',1)[1]
 
-# mpg bitrate setting
+# mpg not writing by ffmpeg more. mpg deprecated?
 if output_video.rsplit('.',1)[1] == 'mpg':
-    mpg_bitrate='-b:v 2500k'
-else:
-    mpg_bitrate=''
+    output_video = output_video.rsplit('.',1)[0]+'.mp4'
 
-
+input_video.rsplit('.',1)[1]
 #If '-t' option was given
 if 'all_tempo' in globals():
     os.system('ffmpeg -r %f -i %s -an -r %f %s -y %s' %(all_tempo*output_rate, input_video, output_rate, mpg_bitrate, output_video))
@@ -188,19 +186,25 @@ for i in open(times_rates_file).readlines():
     
     for i in [0,1]:
         if type(times[i]) == str:
-            if times[i] != 'end':
+            if times[i] == 'end':
+                print '----END----'
+                end = info.split('Duration: ',1)[1].split(',',1)[0].split(':')
+                times[i] = float(end[0])*3600+float(end[1])*60+float(end[2])
+                print 'end time is %f' %(times[i])
+            else:
                 times[i]=eval(times[i])
 
     if tempo == None:
         continue
+
     if '=' in tempo:
         exec(tempo)
-        if 'duration' in tempo:
-            tempo = (times[1]-times[0]) / eval(tempo.split('=',1)[0])
-        tempo=eval(tempo.split('=',1)[0])
+        tempo = tempo.split('=',1)[0]
+    if 'duration' in tempo:
+        tempo = (times[1]-times[0]) / eval(tempo)
     else:
         tempo = eval(tempo)
-
+    print tempo
     times_rates.append([times[0],times[1],tempo])
 
 #spliting and rating video
@@ -231,7 +235,7 @@ for i in times_rates:
         else:
             audio_tempo = ''
         
-        cmd = 'ffmpeg -r %f -i %s %s -ss %f -t -r %f %s %s -y %s' %(input_rate*i[2], input_video, audio_tempo, i[0]/i[2], input_rate, output_rate, mpg_bitrate, temp_name)
+        cmd = 'ffmpeg -r %f -i %s %s -ss %f -t -r %f %s -y %s' %(input_rate*i[2], input_video, audio_tempo, i[0]/i[2], input_rate, output_rate, temp_name)
         cmd = cmd.replace('-t','' if i[1]=='end' else '-t %f' %((float(i[1])-i[0])/i[2]))
 
     list_filenames+=temp_name+' '

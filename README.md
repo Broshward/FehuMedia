@@ -2,7 +2,7 @@ Do not worry and do not many attantion) This is just some simple utilities for m
 
 At present this is some scripts which I need for managing my photos. 
 
-At the nice day this will become convenient manager for storage and various task with photos, for example posting images with its comment in Twitter :)
+At the nice day this will become convenient manager for storage and various task with photos, for example posting images with its comment in Youtube and Blogger :)
 
 Fehu is runie hygge for photos ;)
 

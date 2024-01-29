@@ -6,28 +6,7 @@ Usage:
 
 This program splits video to parts describes in times_rates_file, then convert its with framerates accordingly with times_rates_file info.
 
-times_rates_file consists of strings, each from which contains begin time and end time in seconds or "lost" word for lost parts and scale factor of time for this time part of video.
-
-For example string format of times_rates_file:
-BeginTime-EndTime,ScaleFactor
-or
-EndTime,ScaleFactor
-or
-lost,ScaleFactor
-
-Instead End Time of part acceptably the 'end' word inserting, if it end time of file.
-
-Example of times_rates_file
-$ cat times_rates_file
-0-22611,lost
-22611-22615,1
-22659,333.33
-22662,1
-22680.3,333
-22690,copy
-22696.8,66
-end,1
-lost,1666
+times_rates_file consists of strings, for parts of video tempos. See more examples in file template which created at first launch program for the video file. It lanches the gvim for you can edit his for own values.
 
 If only EndTime presets in string the BeginTime takes from EndTime previous string of 0 is string is first.
 
@@ -48,13 +27,14 @@ tempos_template = '''
 # if only LastTime given, the FirstTime take from LastTime of previous line
 # 'end' - the end of video
 # Variables are too supported, see for example bellow
-# 'copy' is equvalent to 1, but it without video reconversion (for faster perfomance)
+# 'copy' value of tempo is equvalent to 1, but it without video reconversion (for faster perfomance)
+# If variable 'duration' named in tempo section then it be duration instead tempo. 
 
 #lost=100
-0-19,speed=1
-20,speed=speed*1.5
-#30,speed=speed*1.5
-#end,lost
+0-19,1
+#20,speed=1.5
+#30,duration=2
+#end,speed*lost
 '''
 
 import sys,os

@@ -3,7 +3,7 @@
 import sys,os,time
 
 usage='''
-usage: image_for_video.py [ file1 file2 ... fileN ] [ dir1 dir2 ... dirN ]
+usage: image_for_video.py [options] [ file1 file2 ... fileN ] [ dir1 dir2 ... dirN ]
     
     This program create the "temp" directory in /tmp/ and put to this symlinks points to input files. Symlinks renames accordingly date of files. 
     It's nessesary for ffmpeg input files regular expression.
@@ -14,6 +14,9 @@ usage: image_for_video.py [ file1 file2 ... fileN ] [ dir1 dir2 ... dirN ]
     --framerate rate            Framerate settings
     -o filename     Output video filename
     -a audio_file   Add audio to video
+        --temp-dir temp_dir         When launchs program in tmpfs, temporarily files volume may be too large and it will have make the "No space left" error. --temp-dir option will be create temporarily files in the temp_dir directory
+
+                                    !!!!! It very important what temp_dir must be empty therefore it remove all files from temp_dir !!!!!!
 '''
 temporarydir='/tmp/temp'
 framerate_default = 10
@@ -95,6 +98,13 @@ if '-a' in sys.argv:
     audio_file = sys.argv[sys.argv.index('-a')+1]
     sys.argv.pop(sys.argv.index('-a')+1)
     sys.argv.pop(sys.argv.index('-a'))
+
+if '--temp-dir' in sys.argv:
+    temporarydir = sys.argv[sys.argv.index('--temp-dir')+1]
+    if not temporarydir.endswith('/'):
+        temporarydir+= '/'
+    sys.argv.pop(sys.argv.index('--temp-dir')+1)
+    sys.argv.pop(sys.argv.index('--temp-dir'))
 
 if len(sys.argv)==1:
     print '\nEmpty input files list !!!\n' 

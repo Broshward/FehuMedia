@@ -8,6 +8,9 @@ filter_examples='''
 -af volume=0.5              #Example of volume regulation
 -filter:a "volume=0.5"      #
 -vf scale=ih/iw,setsar=1    #Change aspect ratio 
+-vf scale=1080:-2           #Change resolution 
+-loop 1 -i img.jpg -shortest #Replace video with image
+-vf drawbox=color=black:t=fill -c:a copy #Replace video with black screen
 '''
 
 import sys,os,time

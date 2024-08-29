@@ -116,22 +116,25 @@ def create_cache(New=False):
             dirs[i] = dirs[i][:-1]
         else:
             recursive = False
-        for file in os.listdir(dirs[i]):
-            filepath = dirs[i]+'/'+file
-            if os.path.isdir(filepath):
-                if recursive:
-                    dirs.append(filepath+'/*')
-                    print filepath + ' is appended to dirs'
-                continue 
+        if os.path.exists(dirs[i]):
+            for file in os.listdir(dirs[i]):
+                filepath = dirs[i]+'/'+file
+                if os.path.isdir(filepath):
+                    if recursive:
+                        dirs.append(filepath+'/*')
+                        print filepath + ' is appended to dirs'
+                    continue 
 
-            if New == True:
-                if filepath+'\t' in cache:
-                    continue
+                if New == True:
+                    if filepath+'\t' in cache:
+                        continue
 
-            stringout = gen_cache_string(filepath)
-            if output == True:
-                print stringout
-            cache_file.write(stringout)
+                stringout = gen_cache_string(filepath)
+                if output == True:
+                    print stringout
+                cache_file.write(stringout)
+        else:
+            print dirs[i],' not found!'
         i+=1 
 
     cache_file.close()

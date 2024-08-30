@@ -14,9 +14,9 @@ usage: image_for_video.py [options] [ file1 file2 ... fileN ] [ dir1 dir2 ... di
     --framerate rate            Framerate settings
     -o filename     Output video filename
     -a audio_file   Add audio to video
-        --temp-dir temp_dir         When launchs program in tmpfs, temporarily files volume may be too large and it will have make the "No space left" error. --temp-dir option will be create temporarily files in the temp_dir directory
-
-                                    !!!!! It very important what temp_dir must be empty therefore it remove all files from temp_dir !!!!!!
+    --temp-dir temp_dir         When launchs program in tmpfs, temporarily files volume may be too large and it will have make the "No space left" error. --temp-dir option will be create temporarily files in the temp_dir directory
+                                !!!!! It very important what temp_dir must be empty therefore it remove all files from temp_dir !!!!!!
+    --android_files             It needs for time calculate from file_names when create time of images are wrong
 '''
 temporarydir='/tmp/temp'
 framerate_default = 10
@@ -67,6 +67,12 @@ if os.path.exists(temporarydir):
                 os.remove(temporarydir+i)
 else:
     os.mkdir(temporarydir)
+
+if '--android_files' in sys.argv:
+    sys.argv.remove('--android_files')
+    android_files=True
+else: 
+    android_files=False
 
 if '--resolution' in sys.argv:
     resolution = sys.argv[sys.argv.index('--resolution')+1]
@@ -147,7 +153,6 @@ if 'outvideo' not in globals():
 
 i=0
 while i < len(files):
-    #import pdb;pdb.set_trace()
     if not os.path.exists(files[i]):
         print '%s not found' %(files[i])
         exit(-3)
@@ -167,7 +172,13 @@ i=0
 comments= []
 while i < len(files):
     for j in range(int(duration*framerate+1)): # Make the slide
-        symlink_name = temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+j)+'.'+files[i].rsplit('.',1)[1].lower()
+        if android_files:
+            date = files[i].split('_')[1]
+            _time = files[i].split('_')[2].split('.')[0]
+            symlink_name = str(int(time.mktime((int(date[0:4]),int(date[4:6]),int(date[6:]),int(_time[0:2]),int(_time[2:4]),int(_time[4:]),-1,-1,-1))*1000)+j)+'.'+files[i].rsplit('.',1)[1].lower()
+        else:
+            symlink_name = temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+j)+'.'+files[i].rsplit('.',1)[1].lower()
+        #import pdb;pdb.set_trace()
         if os.path.exists(symlink_name):
             print 'It is possible if you makes art for example :))'
             if 'art_power' not in locals():

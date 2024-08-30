@@ -12,6 +12,7 @@ usage='''
         --duration dur,pause        Duration of frame and pause for crossing images (for SlideShow only)
         --temp-dir temp_dir         When launchs program in tmpfs, temporarily files volume may be too large and it will have make the "No space left" error. --temp-dir option will be create temporarily files in the temp_dir directory
         --repeat-audio              If images in argv list or if videos without audio in argv list it will be take audio from videos in argv and repeat while video played.
+        --android_files             It needs for time calculate from file_names when create time of images are wrong
 ''' %(sys.argv[0])
 
 duration_pause_def = '2,1'
@@ -60,6 +61,12 @@ if __name__=="__main__":
         print usage
         exit(0)
 
+    if '--android_files' in sys.argv:
+        sys.argv.remove('--android_files')
+        android_files=True
+    else: 
+        android_files=False
+
     if '--sort-time' in sys.argv:
         sys.argv.remove('--sort-time')
         sort = 'time'
@@ -95,8 +102,12 @@ if __name__=="__main__":
         temp_dir = sys.argv[sys.argv.index('--temp-dir')+1]
         if not temp_dir.endswith('/'):
             temp_dir += '/'
+        if not os.path.isdir(temp_dir):
+            os.mkdir(temp_dir)
         sys.argv.pop(sys.argv.index('--temp-dir')+1)
         sys.argv.pop(sys.argv.index('--temp-dir'))
+    else:
+        temp_dir = './'
 
     if '--ask-difficult-questions' in sys.argv:
         duration = 'ask'
@@ -169,10 +180,7 @@ if __name__=="__main__":
                     list_audio += ' '+v[1]
 #import pdb;pdb.set_trace()
     if 'list_audio' in globals():
-        if 'temp_dir' in globals():
-            audio = temp_dir + 'audio.aac'
-        else:
-            audio = 'audio.aac'
+        audio = temp_dir + 'audio.aac'
         audio = _nextnum(audio)
         cmd = 'concat_videos.py --audio-only -o %s ' %(audio)  +list_audio
         os.system(cmd)
@@ -195,13 +203,20 @@ if __name__=="__main__":
             # Creating slideshow from images
             # i is end of images for slideshow
             # beg_img is beg of images for slideshow
-            if 'temp_dir' in globals():
-                outvideo = temp_dir + files[beg_img][1].rsplit('/',1)[1] + '.mp4'
-            else:
-                outvideo = files[beg_img][1]+'.mp4'
+            outvideo = temp_dir + files[beg_img][1].rsplit('/',1)[1] + '.mp4'
             list_for_concat.append(outvideo)
             temp_files.append(outvideo)
-            cmd = 'image_for_video.py --slideshow --framerate 10 '
+
+            slide_temp = temp_dir+'temp/'
+            if os.path.isdir(slide_temp):
+                if len(os.listdir(slide_temp)):
+                    print 'Directory %s not empty!' %(slide_temp)
+                    exit(-10)
+            else:
+                os.mkdir(slide_temp)
+            cmd = 'image_for_video.py --slideshow --temp-dir %s --framerate 10 ' %(slide_temp)
+            if android_files:
+                cmd += '--android_files '
             if 'resolution' in globals():
                 cmd += '--resolution %s ' %(resolution)
             if 'duration' in globals():
@@ -237,8 +252,7 @@ if __name__=="__main__":
         elif is_video(files[i][1]):
             if 'resolution' in globals():
                 if int(resolution.split(':',1)[1]) != files[i][4]: # Scale needing
-                    if 'temp_dir' in globals():
-                        outvideo = temp_dir + files[i][1].rsplit('/',1)[1]
+                    outvideo = temp_dir + files[i][1].rsplit('/',1)[1]
                     outvideo = _nextnum(outvideo)
                     cmd = 'scale.py -o %s --not-replace --resolution %s %s' %(outvideo, resolution,files[i][1])
                     if os.system(cmd):
@@ -264,8 +278,7 @@ if __name__=="__main__":
 #import pdb;pdb.set_trace()
 # Concatenate parts
     cmd = 'concat_videos.py --crossing-add '
-    if 'temp_dir' in globals():
-        cmd += '--temp-dir %s ' %(temp_dir)
+    cmd += '--temp-dir %s ' %(temp_dir)
     if sort == 'time':
         cmd += '--sort-time '
     cmd += '-o %s %s' %(output_video, ' '.join(list_for_concat))

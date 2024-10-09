@@ -13,7 +13,7 @@ else:
 filename=sys.argv[1]
 filename = os.path.realpath(filename)
 
-data=os.popen('/usr/bin/vendor_perl/exiftool -g2 %s ' %(filename)).read()
+data=os.popen('/usr/bin/vendor_perl/exiftool -g2 "%s" ' %(filename)).read()
 
 print 'Media:'
 param='File Name'

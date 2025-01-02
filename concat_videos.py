@@ -103,12 +103,15 @@ for i in range(len(list_names)):
         else:
             ts_name = list_names[i] 
         ts_name += '.ts'
-        cmd= 'ffmpeg '
+        cmd= 'ffmpeg -i %s ' %(list_names[i])
         if os.system('ffmpeg -i %s 2>&1|grep Audio' %(list_names[i]))!=0: # Have you audio stream in file?
-            cmd += '-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 ' %(list_names[i],ts_name) # Add silent audio
+            cmd += '-c copy ' 
+        else:
+            cmd += '-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 -c:v copy -c:a aac -shortest ' # Add silent audio
         # Orientation display check
         orient = os.popen('ffmpeg -i %s 2>&1 |grep "rotation of "' %(list_names[i])).read()
         if orient!='': # If video contain orientation display info metadata it must be reconverting because mpegts not supporting metadata info :((
+            import pdb;pdb.set_trace()
             if 'temp_dir' in globals():
                 temp_name = temp_dir + '_' + list_names[i].rsplit('/',1)[1]
             else:
@@ -116,7 +119,7 @@ for i in range(len(list_names)):
             os.system('ffmpeg -i %s %s' %(list_names[i],temp_name)) 
             os.utime(temp_name, (times[i][0],times[i][0]))
             os.rename(temp_name, os.path.realpath(list_names[i]))
-        cmd += '-i %s -c copy %s' %(list_names[i],ts_name)  
+        cmd += '-c copy %s' %(ts_name)  
         print cmd
         os.system(cmd)
         ts_list.append(ts_name)

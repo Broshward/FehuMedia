@@ -54,20 +54,6 @@ def sort_time(l):
         l[i] = times[i][1]
     return l
 
-if os.path.exists(temporarydir):
-    if not os.path.isdir(temporarydir):
-        print "%s is not directory!" %(temporarydir)
-        exit(-1)
-    else:
-        for i in os.listdir(temporarydir):
-            if not os.path.islink(temporarydir+i):
-                print "Cannot remove %s. Is not a symlink!" %(temporarydir+i)
-                exit(-2)
-            else:
-                os.remove(temporarydir+i)
-else:
-    os.mkdir(temporarydir)
-
 if '--android_files' in sys.argv:
     sys.argv.remove('--android_files')
     android_files=True
@@ -111,6 +97,20 @@ if '--temp-dir' in sys.argv:
         temporarydir+= '/'
     sys.argv.pop(sys.argv.index('--temp-dir')+1)
     sys.argv.pop(sys.argv.index('--temp-dir'))
+
+if os.path.exists(temporarydir):
+    if not os.path.isdir(temporarydir):
+        print "%s is not directory!" %(temporarydir)
+        exit(-1)
+    else:
+        for i in os.listdir(temporarydir):
+            if not os.path.islink(temporarydir+i):
+                print "Cannot remove %s. Is not a symlink!" %(temporarydir+i)
+                exit(-2)
+            else:
+                os.remove(temporarydir+i)
+else:
+    os.mkdir(temporarydir)
 
 if len(sys.argv)==1:
     print '\nEmpty input files list !!!\n' 

@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 import sys,os,time,datetime
 
@@ -28,11 +28,12 @@ num=0
 unsuccess_list=[]
 for i in sys.argv[1:]:
     if progress:
-        print '\rProgress: %d%%' %(100*num/(len(sys.argv)-1)),
+        print ('\rProgress: %d%%' %(100*num/(len(sys.argv)-1)),end='')
     if os.path.isdir(i):
         continue
     #print i    
     data=os.popen('/usr/bin/vendor_perl/exiftool -T -DateTimeOriginal %s ' %(i)).read()
+    breakpoint()
     #print data
     try:
         date = time.mktime(datetime.datetime.strptime(data.strip(), "%Y:%m:%d %H:%M:%S").timetuple())
@@ -42,8 +43,8 @@ for i in sys.argv[1:]:
         unsuccess_list.append(i)
     sys.stdout.flush()
     num +=1
-print 'Unsuccess redate files:'
+print ('Unsuccess redate files:')
 for i in unsuccess_list:
-    print i
+    print(i) 
     
 

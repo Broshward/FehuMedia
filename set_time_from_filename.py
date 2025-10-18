@@ -1,5 +1,4 @@
-#!/usr/bin/python2
-#coding:utf8
+#!/usr/bin/python
 
 import sys,os,time
 
@@ -10,7 +9,7 @@ This program takes image or video timestamps from android similar filenames and 
 '''
 
 if len(sys.argv)==1:
-    print usage
+    print(usage) 
 for i in sys.argv[1:]:
     try:date = i.rsplit('/',1)[1].split('_')[1]
     except:import pdb;pdb.set_trace()

@@ -11,6 +11,7 @@ This program takes image or video timestamps from android similar filenames and 
 if len(sys.argv)==1:
     print(usage) 
 for i in sys.argv[1:]:
+    i=os.path.abspath(i)
     try:date = i.rsplit('/',1)[1].split('_')[1]
     except:import pdb;pdb.set_trace()
     _time = i.rsplit('/',1)[1].split('_')[2].split('.')[0]

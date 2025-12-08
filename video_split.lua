@@ -1,3 +1,6 @@
+usage=string.format([[This program splitting video or audio to files with duration.
+	usage: lua %s /path/to/file duration]],arg[0])
+
 function split(s,d)
 	s=s..d
 	print(s)
@@ -9,9 +12,8 @@ function split(s,d)
 	return t
 end
 
+if #arg<2 then print(usage) os.exit(-1) end 
 f=arg[1]
-if not f then print(string.format([[This program splitting video or audio to files with duration.
-	usage: lua %s /path/to/file duration]],arg[0])) os.exit() end 
 fs=split(f,'.')
 for k,v in pairs(fs) do print(k,v) end
 dlit=tonumber(arg[2]) 

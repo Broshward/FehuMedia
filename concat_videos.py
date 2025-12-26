@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 #coding:utf8
 
 import sys,os
@@ -13,7 +13,7 @@ usage='''
 ''' %(sys.argv[0])
 
 if '--help' in sys.argv:
-    print usage
+    print(usage) 
     exit(0)
 
 if '--sort-time' in sys.argv:
@@ -50,7 +50,7 @@ if '--crossing-add' in sys.argv:
     crossing = True
 
 if len(sys.argv)==1:
-    print '\nEmpty input files list !!!\n' 
+    print ('\nEmpty input files list !!!\n') 
     exit(-4)
 #list_files=open('list_files','wt')
 list_names=sys.argv[1:]
@@ -120,7 +120,7 @@ for i in range(len(list_names)):
             os.utime(temp_name, (times[i][0],times[i][0]))
             os.rename(temp_name, os.path.realpath(list_names[i]))
         cmd += '-c copy %s' %(ts_name)  
-        print cmd
+        print(cmd) 
         os.system(cmd)
         ts_list.append(ts_name)
         
@@ -130,7 +130,7 @@ if audio_only:
     cmd = "ffmpeg -i '%s' -y %s" %(concat_str,output_video)
 else:
     cmd = "ffmpeg -i '%s' -c copy -y %s" %(concat_str,output_video)
-print cmd
+print(cmd) 
 os.system(cmd)
 
 #import pdb;pdb.set_trace()
@@ -142,7 +142,7 @@ for comment in comments:
 comment=';'.join(tags)
 
 cmd='/usr/bin/vendor_perl/exiftool -overwrite_original %s -UserComment=\'%s\'' %(output_video,comment)
-print cmd
+print(cmd) 
 os.system(cmd)
 
 for i in ts_list: #Remove temporalily files

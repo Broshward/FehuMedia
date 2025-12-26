@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 filter_examples='''
 -vf eq=saturation=2.5 -c:a copy   #Example of reconvert saturation change
@@ -36,8 +36,8 @@ else:
 
 files = sys.argv[1:]
 
-print filter_examples,'\n'
-print 'Please insert filter string: ',
+print(filter_examples,'\n') 
+print ('Please insert filter string: ') #,end=''  Why not working???!!!!!!!!!!!!!!!!!!!!!
 ans = sys.stdin.readline().strip()
 if ans=='':
     None
@@ -45,7 +45,7 @@ else:
     command_string = ans
 
 if not show:
-    print 'Replace input file(s)? (N or additions for create a copy) [Y/n]: ',
+    print ('Replace input file(s)? (N or additions for create a copy) [Y/n]: ') #,end='' Why not working??????!!!!!!!
     ans = sys.stdin.readline().strip()
 
 for i in files:
@@ -71,7 +71,7 @@ for i in files:
         cmd="ffplay -fs %s %s" %(command_string,i)
     else:
         cmd="ffmpeg -i %s %s -qscale:v 1 -qmin 1 %s" %(i,command_string,outvideo)
-    print cmd
+    print(cmd) 
     if os.system(cmd) != 0:
         exit(-1)
 
@@ -82,5 +82,5 @@ for i in files:
         os.utime(outvideo, (time,time))
         if ans=='y' or ans=='Y' or ans=='':
             cmd = 'mv %s %s' %(outvideo,i) 
-            print cmd
+            print(cmd) 
             os.system(cmd)

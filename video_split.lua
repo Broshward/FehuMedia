@@ -23,7 +23,7 @@ io.input('dur')
 duration=io.read()
 os.remove('dur')
 duration = tonumber(duration)
-count = math.floor(duration / dlit)
+count = duration // dlit
 if (duration % dlit) ~= 0 then count=count+1 end
 print(duration,count)
 

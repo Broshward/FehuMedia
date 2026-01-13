@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 import sys,os,time
 
@@ -32,7 +32,7 @@ def outvideoexists(outvideo):
         outvideo = os.getcwd() + '/' + outvideo
     if os.path.exists(outvideo):
         if 'ans' not in globals():
-            print 'Output file "%s" is exist. Replace this?[y/N]: ' %(outvideo),
+            print ('Output file "%s" is exist. Replace this?[y/N]: ' %(outvideo), end=''); sys.stdout.flush()
             ans = sys.stdin.readline().strip()
         if ans=='' or ans=='N' or ans=='n':
             num=1
@@ -40,7 +40,7 @@ def outvideoexists(outvideo):
                 num+=1
             outvideo=outvideo.rsplit('.',1)[0]+'_%d.mp4' %(num)
         elif ans=='y' or ans=='Y':
-            print 'Overwriting file %s' %(outvideo)
+            print('Overwriting file %s' %(outvideo)) 
         else:
             outvideo = ans
     return outvideo
@@ -100,12 +100,12 @@ if '--temp-dir' in sys.argv:
 
 if os.path.exists(temporarydir):
     if not os.path.isdir(temporarydir):
-        print "%s is not directory!" %(temporarydir)
+        print("%s is not directory!" %(temporarydir)) 
         exit(-1)
     else:
         for i in os.listdir(temporarydir):
             if not os.path.islink(temporarydir+i):
-                print "Cannot remove %s. Is not a symlink!" %(temporarydir+i)
+                print ("Cannot remove %s. Is not a symlink!" %(temporarydir+i))
                 exit(-2)
             else:
                 os.remove(temporarydir+i)
@@ -113,13 +113,13 @@ else:
     os.mkdir(temporarydir)
 
 if len(sys.argv)==1:
-    print '\nEmpty input files list !!!\n' 
+    print ('\nEmpty input files list !!!\n') 
     exit(-4)
 files = sys.argv[1:]
 
 if slideshow:
     if 'duration' not in globals():
-        print "Insert picture duration and interval in seconds [%s]: " %(duration_pause_def),
+        print("Insert picture duration and interval in seconds [%s]: " %(duration_pause_def),end=''); sys.stdout.flush()
         duration=sys.stdin.readline().strip()   
     if duration == '':
         duration,pause = duration_pause_def.split(',')
@@ -135,12 +135,12 @@ else:
     duration=pause=0
 
 if 'framerate' not in globals():
-    print "Insert output framerate video in images per second [%s]: " %(framerate_default ),
+    print("Insert output framerate video in images per second [%s]: " %(framerate_default ), end='');  sys.stdout.flush()
     framerate=sys.stdin.readline().strip()
     if framerate=='':
         framerate = framerate_default
     elif not framerate.isdigit():
-        print "The framerate must be a digit!"
+        print("The framerate must be a digit!") 
         exit(-1)
 framerate = float(framerate)
 
@@ -154,7 +154,7 @@ if 'outvideo' not in globals():
 i=0
 while i < len(files):
     if not os.path.exists(files[i]):
-        print '%s not found' %(files[i])
+        print('%s not found' %(files[i])) 
         exit(-3)
     elif os.path.isdir(files[i]):
         for j in os.listdir(files[i]):
@@ -180,7 +180,7 @@ while i < len(files):
             symlink_name = temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+j)+'.'+files[i].rsplit('.',1)[1].lower()
         #import pdb;pdb.set_trace()
         if os.path.exists(symlink_name):
-            print 'It is possible if you makes art for example :))'
+            print('It is possible if you makes art for example :))') 
             if 'art_power' not in locals():
                 art_power=1 # Counter for change link name
             else:
@@ -189,7 +189,7 @@ while i < len(files):
             #exit(-110)
         #os.symlink(files[i],temporarydir+'/'+str(os.stat(files[i]).st_mtime_ns)) #For  python3 translating
         try:os.symlink(files[i],symlink_name)
-        except:print symlink_name
+        except:print(symlink_name) 
     if slideshow:
         comment=os.popen("get_comment %s" % (files[i])).read()
         if "User Comment" in comment: # For JPEG, else for videos
@@ -201,7 +201,7 @@ while i < len(files):
         if size2<size:
             size=size2
         for j in range(int(pause*framerate)): # Make pause crossing (adding temporary crosing files to symlinks)
-            print 'Make pause crossing images: ',j
+            print('Make pause crossing images: ',j) 
             percentage = j*100/(pause*framerate)
             filename=temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+int(duration*framerate+1)+j)+'.'+files[i].rsplit('.',1)[1].lower()
             cmd='composite -blend %s -gravity Center -resize x%s %s -resize x%s %s %s' %(percentage,size, files[i+1], size ,files[i],filename)
@@ -221,7 +221,7 @@ else:
 
 outvideo_time=os.path.getmtime(files[-1])
 cmd="ffmpeg %s -framerate %s -pattern_type glob -i '%s/*.jpg' -map 0:a -map 1:v -vf scale=%s %s /tmp/%s" %(audio_in, framerate,temporarydir,resolution,audio_out,outvideo.rsplit('/',1)[1])
-print cmd
+print(cmd) 
 os.system(cmd)
 os.system('mv %s %s' %('/tmp/'+outvideo.rsplit('/',1)[1],outvideo))
 
@@ -233,7 +233,7 @@ for comment in comments:
 comment=';'.join(tags)
 
 cmd='/usr/bin/vendor_perl/exiftool -overwrite_original %s -UserComment=\'%s\'' %(outvideo,comment)
-print cmd
+print(cmd) 
 os.system(cmd)
 
 os.system('rm -rf %s' %(temporarydir))

@@ -37,7 +37,7 @@ else:
 files = sys.argv[1:]
 
 print(filter_examples,'\n') 
-print ('Please insert filter string: ') #,end=''  Why not working???!!!!!!!!!!!!!!!!!!!!!
+print ('Please insert filter string: ',end=''); sys.stdout.flush()
 ans = sys.stdin.readline().strip()
 if ans=='':
     None
@@ -45,7 +45,7 @@ else:
     command_string = ans
 
 if not show:
-    print ('Replace input file(s)? (N or additions for create a copy) [Y/n]: ') #,end='' Why not working??????!!!!!!!
+    print ('Replace input file(s)? (N or additions for create a copy) [Y/n]: ',end=''); sys.stdout.flush()
     ans = sys.stdin.readline().strip()
 
 for i in files:

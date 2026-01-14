@@ -32,7 +32,7 @@ def outvideoexists(outvideo):
         outvideo = os.getcwd() + '/' + outvideo
     if os.path.exists(outvideo):
         if 'ans' not in globals():
-            print ('Output file "%s" is exist. Replace this?[y/N]: ' %(outvideo), end=''); sys.stdout.flush()
+            print ('Output file "%s" is exist. Replace this?[y/N]: ' %(outvideo), end='', flush=True)
             ans = sys.stdin.readline().strip()
         if ans=='' or ans=='N' or ans=='n':
             num=1
@@ -119,7 +119,7 @@ files = sys.argv[1:]
 
 if slideshow:
     if 'duration' not in globals():
-        print("Insert picture duration and interval in seconds [%s]: " %(duration_pause_def),end=''); sys.stdout.flush()
+        print("Insert picture duration and interval in seconds [%s]: " %(duration_pause_def),end='', flush=True)
         duration=sys.stdin.readline().strip()   
     if duration == '':
         duration,pause = duration_pause_def.split(',')
@@ -135,7 +135,7 @@ else:
     duration=pause=0
 
 if 'framerate' not in globals():
-    print("Insert output framerate video in images per second [%s]: " %(framerate_default ), end='');  sys.stdout.flush()
+    print("Insert output framerate video in images per second [%s]: " %(framerate_default ), end='', flush=True)
     framerate=sys.stdin.readline().strip()
     if framerate=='':
         framerate = framerate_default

@@ -200,8 +200,9 @@ while i < len(files):
         size2=os.popen('identify -ping -format %%h %s' %(files[i]  )).read() #Height of second frame
         if size2<size:
             size=size2
+        print('Frame №',i+1, 'from', len(files)-1)
         for j in range(int(pause*framerate)): # Make pause crossing (adding temporary crosing files to symlinks)
-            print('Make pause crossing images: ',j) 
+            print('Make pause crossing images: ',j+1) 
             percentage = j*100/(pause*framerate)
             filename=temporarydir+str(int(os.stat(files[i]).st_mtime*1000)+int(duration*framerate+1)+j)+'.'+files[i].rsplit('.',1)[1].lower()
             cmd='composite -blend %s -gravity Center -resize x%s %s -resize x%s %s %s' %(percentage,size, files[i+1], size ,files[i],filename)

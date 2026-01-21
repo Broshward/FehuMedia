@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 import sys,os,time
 
@@ -23,12 +23,12 @@ if '--time' in sys.argv:
 files = sys.argv[1:]
 
 if after != None:
-    print "Insert filename for relative to it time: " 
+    print("Insert filename as relative frame to it time: " ) 
     file_time=sys.stdin.readline().strip()
     time = os.path.getmtime(file_time)
 
 if 'time' not in globals():
-    print "Insert time of file [%s]: " %(os.path.getmtime(files[0])),
+    print("Insert time of file [%s]: " %(os.path.getmtime(files[0])), end='', flush=True) 
     time=sys.stdin.readline().strip()
 
 for i in range(len(files)):

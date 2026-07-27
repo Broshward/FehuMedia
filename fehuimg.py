@@ -49,19 +49,33 @@ if os.path.exists(fehu_home):
 else:
     os.mkdir(fehu_home)
 
+def run_popen(command):
+    """
+    Идеальная замена os.popen().read() для Python 3.
+    Объединяет stdout и stderr, возвращая весь текст, независимо от ошибок.
+    """
+    res = subprocess.run(command, shell=True, capture_output=True, text=True)
+    # Объединяем вывод и ошибки, чтобы имитировать поведение реального терминала
+    return (res.stdout or "") + (res.stderr or "")
+
+def run_system(command):
+    """Замена os.system()"""
+    res = subprocess.run(command, shell=True)
+    return res.returncode
+
 def gen_cache_string(filepath):
-    comment = os.popen('get_comment %s' %(filepath)).read()
+    comment = run_popen('get_comment %s' %(filepath))
     if comment!='':
         comment = comment.split(':',1)[1].strip()
     #if comment=='':
     #    continue
 
     if FileTime:
-        date = os.popen('get_date %s' %(filepath)).read().strip() # !Option: it for media time instead file time priority
+        date = run_popen('get_date %s' %(filepath)).strip() # !Option: it for media time instead file time priority
         if date=='-':
-            date = os.popen('date_of_file %s' %(filepath)).read().strip()
+            date = run_popen('date_of_file %s' %(filepath)).strip()
     else:
-        date = os.popen('date_of_file %s' %(filepath)).read().strip()
+        date = run_popen('date_of_file %s' %(filepath)).strip()
     
     return filepath+'\t'+date+'\t'+comment+'\n'
 
@@ -141,10 +155,23 @@ def create_cache(New=False):
 
     cache_file.close()
 
-def symlink_time_change(timestamp,symlink):
-    subprocess.call(['touch', '-h', '-t', timestamp, symlink])
-    #os.system('touch -h -r "'+file+'" '+ symlink) # %s" %(file,symlink))
-    #os.system('touch -h -t %s "%s"' %(filetime,symlink))
+def symlink_time_change(timestamp_str, symlink):
+    from datetime import datetime
+    """
+    Быстрая замена 'touch -h -t ...' средствами Python 3.
+    Ожидает timestamp_str в формате 'YYYYMMDDhhmm.ss' или 'YYYYMMDDhhmm'
+    """
+    # 1. Парсим строку времени (поддерживаем формат со секундами .ss и без)
+    if '.' in timestamp_str:
+        dt = datetime.strptime(timestamp_str, "%Y%m%d%H%M.%S")
+    else:
+        dt = datetime.strptime(timestamp_str, "%Y%m%d%H%M")
+        
+    # 2. Переводим в секунды (Unix Epoch)
+    epoch_time = dt.timestamp()
+    
+    # 3. Меняем время самого симлинка, не трогая целевой файл
+    os.utime(symlink, times=(epoch_time, epoch_time), follow_symlinks=False)
 
 def mount(mount_point,comments):
     import datetime,time
@@ -152,15 +179,14 @@ def mount(mount_point,comments):
         mount_point += '/'
     try:os.mkdir(mount_point)
     except:None
-    os.system("sudo umount %s" %(mount_point))
-    if 'mount point does not exist' in os.popen("sudo mount -t tmpfs tmpfs %s 2>&1" %(mount_point)).read():
+    run_system("sudo umount %s" %(mount_point))
+    if 'mount point does not exist' in run_popen("sudo mount -t tmpfs tmpfs %s 2>&1" %(mount_point)):
         print(mount_point.strip('/').strip('/'))
         os.mkdir(mount_point)
-        os.system("sudo mount -t tmpfs tmpfs %s 2>&1" %(mount_point))
-    os.system("sudo chown %s:%s %s" %(os.getlogin(),os.getlogin(),mount_point))
+        run_system("sudo mount -t tmpfs tmpfs %s 2>&1" %(mount_point))
+    run_system("sudo chown %s:%s %s" %(os.getlogin(),os.getlogin(),mount_point))
     # Now mount_point is empty
 
-    breakpoint()
     dates_dir = mount_point+'dates/'
     os.mkdir(dates_dir) #directory for dates of images
     without_hash_dir = mount_point + 'without_hash/'

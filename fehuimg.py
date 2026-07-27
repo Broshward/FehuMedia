@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 #coding:utf8
 
 fehu_home = '~/.fehumedia'
@@ -30,6 +30,8 @@ Options:
 
     pattern is regexp of searching file comment part.
 
+    The fehu.conf file must be existed and contain the mount_point="/path/to/mount/point" option for convenient usage.
+
 """
 
 
@@ -42,7 +44,7 @@ conf_file = fehu_home + '/fehu.conf'
 
 if os.path.exists(fehu_home):
     if not os.path.isdir(fehu_home):
-        print 'Cannot create %s. File exists!' %(fehu_home)
+        print('Cannot create %s. File exists!' %(fehu_home)) 
         exit(-1)
 else:
     os.mkdir(fehu_home)
@@ -69,7 +71,7 @@ def replace_cache(files):
     cache = open(cache_file,'r').read()
     for filepath in files:
         if not os.path.exists(filepath):
-            print 'File %s not exists!' %(filepath)
+            print('File %s not exists!' %(filepath)) 
         if filepath+'\t' in cache:
             file_cache = cache[cache.find(filepath+'\t'):].split('\n',1)[0] + '\n'
             cache = cache.replace(file_cache, gen_cache_string(filepath))
@@ -107,7 +109,7 @@ def create_cache(New=False):
             continue
         try: dirs[i]=dirs[i].split('#')[0].strip() # The comment in delete
         except: None
-        print dirs[i]
+        print(dirs[i]) 
         if dirs[i]=='':
             i+=1 
             continue
@@ -122,7 +124,7 @@ def create_cache(New=False):
                 if os.path.isdir(filepath):
                     if recursive:
                         dirs.append(filepath+'/*')
-                        print filepath + ' is appended to dirs'
+                        print(filepath + ' is appended to dirs') 
                     continue 
 
                 if New == True:
@@ -131,10 +133,10 @@ def create_cache(New=False):
 
                 stringout = gen_cache_string(filepath)
                 if output == True:
-                    print stringout
+                    print(stringout) 
                 cache_file.write(stringout)
         else:
-            print dirs[i],' not found!'
+            print(dirs[i],' not found!') 
         i+=1 
 
     cache_file.close()
@@ -151,10 +153,14 @@ def mount(mount_point,comments):
     try:os.mkdir(mount_point)
     except:None
     os.system("sudo umount %s" %(mount_point))
-    os.system("sudo mount -t tmpfs tmpfs %s;\
-               sudo chown %s:%s %s" %(mount_point,os.getlogin(),os.getlogin(),mount_point))
+    if 'mount point does not exist' in os.popen("sudo mount -t tmpfs tmpfs %s 2>&1" %(mount_point)).read():
+        print(mount_point.strip('/').strip('/'))
+        os.mkdir(mount_point)
+        os.system("sudo mount -t tmpfs tmpfs %s 2>&1" %(mount_point))
+    os.system("sudo chown %s:%s %s" %(os.getlogin(),os.getlogin(),mount_point))
     # Now mount_point is empty
 
+    breakpoint()
     dates_dir = mount_point+'dates/'
     os.mkdir(dates_dir) #directory for dates of images
     without_hash_dir = mount_point + 'without_hash/'
@@ -166,8 +172,8 @@ def mount(mount_point,comments):
         strnum += 1 # String numbering begin with first (1) not 0.
         try:file,date,comment = i.split('\t',2)
         except:
-            print "You fehu.cache file damaged in string num <%d>!\n Try fehu.py -c" %(strnum)
-            print i
+            print("You fehu.cache file damaged in string num <%d>!\n Try fehu.py -c" %(strnum)) 
+            print(i) 
             exit(2)
         
         try:
@@ -293,7 +299,7 @@ if __name__=='__main__':
         FileTime = False
 
     if '-h' in sys.argv:
-        print help
+        print(help) 
         exit(0)
 
     if '-q' in sys.argv:
@@ -313,12 +319,13 @@ if __name__=='__main__':
             mount_point = open(conf_file,'r').read()
             mount_point = mount_point[mount_point.find('mount_point'):]
             if mount_point == None:
-                print 'File fehu.conf not contain the "mount_point" variable.'
+                print('File fehu.conf not contain the "mount_point" variable.') 
                 mount_point = '/tmp/fehumedia/'
             else:
-                mount_point = mount_point.split('=',1)[1].lstrip().split('\n')[0].rstrip()
+                mount_point = mount_point.split('=',1)[1].lstrip().split('\n')[0].rstrip().strip('"').strip("'")
         except:
-            print 'File fehu.conf not exists'
+            print('File fehu.conf not exists') 
+            exit(-323)
         
         mount_point=mount_point.replace('~',home)
 
@@ -354,12 +361,12 @@ if __name__=='__main__':
             size[0] = size[0][1:]
         try: size[0] = int(size[0])
         except:
-            print 'The size parameter must be [>|<|=](integer)[G|M|k]'
+            print('The size parameter must be [>|<|=](integer)[G|M|k]') 
             exit(3)
 
     try:comments = open(cache_file,'r').read()
     except:
-        print 'Cache of images files not exists! Try -c option!'
+        print('Cache of images files not exists! Try -c option!') 
         exit(1)
 
     if '-m' in sys.argv:
@@ -374,8 +381,4 @@ if __name__=='__main__':
     
     for i in comments.split('\n'):
         if pattern in i:
-            print i
-
-
-
-
+            print(i) 

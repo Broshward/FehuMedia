@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 help="""
 Usage:
@@ -39,7 +39,7 @@ tempos_template = '''
 
 import sys,os
 if '-h' in sys.argv:
-    print help
+    print(help) 
     exit(0)
 
 if '-r' in sys.argv:
@@ -82,15 +82,15 @@ else:
 sys.argv.pop(0)
 
 if len(sys.argv)==0:
-    print "Input video file not given! Please read the help with -h option."
+    print("Input video file not given! Please read the help with -h option.") 
     exit(-1)
 elif len(sys.argv)>1:
-    print "Too many argiments given! Please read the help with -h option."
+    print("Too many argiments given! Please read the help with -h option.") 
     import pdb; pdb.set_trace()
 
 input_video = sys.argv[0]
 if not os.path.exists(input_video):
-    print "Input video file not found!"
+    print("Input video file not found!") 
     exit(-2)
 
 # -- This need to add in the all utils which worked with media
@@ -100,10 +100,10 @@ if "User Comment" in comment: # For JPEG, else for videos
     comment = comment.split(':',1)[1].strip()
 # -- This need to add in the all utils which worked with media
 
-info=os.popen("ffmpeg -i %s 2>&1 "%(input_video)).read()
-if 'fps' in info: # File is video
-    input_rate = float(info.split('fps',1)[0].rsplit(',',1)[1].strip())
-    print input_rate
+info=os.popen("get_info.py %s"%(input_video)).read()
+if 'Video Frame Rate' in info: # File is video
+    input_rate = float(info.split('Video Frame Rate',1)[1].split(':')[1].rsplit('\n',1)[0].strip())
+    print(input_rate) 
 
 outvideo_time=os.path.getmtime(input_video)
 
@@ -127,7 +127,7 @@ if 'all_tempo' in globals():
 if 'times_rates_file' not in globals():
     times_rates_file = input_video.rsplit('.',1)[0]+'_tempos' #Default times and tempos filename
 if ask:
-    print "Insert tempos_file name please: " %(times_rates_file),
+    print("Insert tempos_file name please: " %(times_rates_file),end='') 
     times_rates_file=sys.stdin.readline().strip()   
 
 # If times_rates_file not exists we need create this. 
@@ -167,10 +167,14 @@ for i in open(times_rates_file).readlines():
     for i in [0,1]:
         if type(times[i]) == str:
             if times[i] == 'end':
-                print '----END----'
-                end = info.split('Duration: ',1)[1].split(',',1)[0].split(':')
-                times[i] = float(end[0])*3600+float(end[1])*60+float(end[2])
-                print 'end time is %f' %(times[i])
+                print('----END----') 
+                duration_video = info.split('Duration',1)[1].split(':',1)[1].split('\n',1)[0].strip()
+                if ':' in duration_video:
+                    end = duration_video.split(':')
+                    times[i] = float(end[0])*3600+float(end[1])*60+float(end[2])
+                else:
+                    times[i] = float(duration_video.split('s')[0].strip())
+                print('end time is %f' %(times[i])) 
             else:
                 times[i]=eval(times[i])
 
@@ -184,14 +188,14 @@ for i in open(times_rates_file).readlines():
         tempo = (times[1]-times[0]) / eval(tempo)
     else:
         tempo = eval(tempo)
-    print tempo
+    print(tempo) 
     times_rates.append([times[0],times[1],tempo])
 
 #spliting and rating video
 list_filenames=''
 name=0
 for i in times_rates:
-    print i
+    print(i) 
     temp_name = '%03d.%s' %(name, output_video.rsplit('.',1)[1])  
     if i[2]=='copy' and input_video.rsplit('.',1)[1] == output_video.rsplit('.',1)[1]:
         cmd = 'ffmpeg -i %s -c copy -ss %f -t -y %s' %(input_video, i[0], temp_name)
@@ -220,7 +224,7 @@ for i in times_rates:
 
     list_filenames+=temp_name+' '
     name += 1
-    print cmd
+    print(cmd) 
     os.system(cmd)
 
 if without_concat:
@@ -234,7 +238,7 @@ if without_concat:
 
 #Concatenate parts from temporarily files to output 
 cmd='concat_videos.py %s' %(list_filenames)
-print cmd
+print(cmd) 
 if os.system(cmd)!=0:
     exit(-127)
 

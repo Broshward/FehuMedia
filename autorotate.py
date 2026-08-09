@@ -10,7 +10,7 @@ This program using for autoratating media files of cameras which saving orientat
 '''
 
 if len(sys.argv)==1:
-    print usage
+    print(usage) 
 for i in sys.argv[1:]:
     i_time=os.path.getmtime(i)
     os.system('exiftran -a -i %s' %(i))

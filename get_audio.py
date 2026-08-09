@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 #ffplay -fs -vf eq=saturation=2.5 178INTVL.mp4    Example of preview saturation change
 #ffmpeg -i INPUT.MOV -vf eq=saturation=2.5 -c:a copy OUTPUT.MOV   Example of reconvert saturation change
@@ -21,7 +21,7 @@ for i in files:
     time=os.path.getmtime(i)
     outfile = i+'.aac'
     cmd = "ffmpeg -i %s -c:v none -c:a aac %s" %(i, outfile)
-    print cmd
+    print(cmd) 
     if os.system(cmd) != 0:
         exit(-127)
 

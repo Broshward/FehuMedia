@@ -1,9 +1,9 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 import sys,os
 filenames=sys.argv[1:]
 for i in filenames:
-    print i,' ',
+    print(i,' ',end='',flush=True) 
 print
 filename = filenames[0]
 filename = os.path.realpath(filename)
@@ -17,9 +17,9 @@ elif is_video(filename):
     cmd='mplayer %s' %(filename)
     cmd='ffplay -fs %s' %("'"+filename+"'")
 else:
-    print 'File %s is no mediafile' %("'"+filename+"'")
+    print('File %s is no mediafile' %("'"+filename+"'")) 
     exit(-1)
     
-print cmd
+print(cmd) 
 window=os.popen(cmd,'w')
 

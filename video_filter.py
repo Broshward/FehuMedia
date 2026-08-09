@@ -5,12 +5,13 @@ filter_examples='''
 -vf crop=out_w:out_h:x:y    #Example for crop video
 -vf crop=in_w/2:in_h/2      #Example for crop video 2 times to center
 -vf rotate=PI               #Rotate 180 degree
--af volume=0.5              #Example of volume regulation
+-c:v copy -af volume=0.5    #Example of volume regulation only
 -filter:a "volume=0.5"      #
 -vf scale=ih/iw,setsar=1    #Change aspect ratio 
 -vf scale=1080:-2           #Change resolution 
 -loop 1 -i img.jpg -shortest #Replace video with image
 -vf drawbox=color=black:t=fill -c:a copy #Replace video with black screen
+-vf "fps=30"                # Set up frame rate to 30 without speed change
 '''
 
 import sys,os,time

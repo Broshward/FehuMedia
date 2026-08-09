@@ -111,7 +111,6 @@ for i in range(len(list_names)):
         # Orientation display check
         orient = os.popen('ffmpeg -i %s 2>&1 |grep "rotation of "' %(list_names[i])).read()
         if orient!='': # If video contain orientation display info metadata it must be reconverting because mpegts not supporting metadata info :((
-            import pdb;pdb.set_trace()
             if 'temp_dir' in globals():
                 temp_name = temp_dir + '_' + list_names[i].rsplit('/',1)[1]
             else:

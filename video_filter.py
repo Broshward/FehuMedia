@@ -11,7 +11,7 @@ filter_examples='''
 -vf scale=1080:-2           #Change resolution 
 -loop 1 -i img.jpg -shortest #Replace video with image
 -vf drawbox=color=black:t=fill -c:a copy #Replace video with black screen
--vf "fps=30"                # Set up frame rate to 30 without speed change
+-vf "fps=30"                # Set up frame rate to 30 without speed(duration) change
 '''
 
 import sys,os,time

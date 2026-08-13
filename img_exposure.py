@@ -3,6 +3,7 @@ import os
 import sys
 import argparse
 import subprocess
+import shutil
 
 def get_image_mean_brightness(image_path):
     """
@@ -28,6 +29,21 @@ def process_file(input_path, output_path, current_idx, total_files, reference_pa
     # Calculate progress percentage
     progress = int((current_idx / total_files) * 100)
     progress_str = f"[{progress}%]"
+
+    # Check if the current file is the reference itself
+    if reference_path and os.path.abspath(input_path) == os.path.abspath(reference_path):
+        if os.path.abspath(input_path) == os.path.abspath(output_path):
+            # Overwrite mode: do nothing, it's already perfect
+            return True
+        else:
+            # Subdirectory mode: safely copy the reference as-is to complete the batch
+            print(f"-> {os.path.basename(input_path)} {progress_str}: [Reference file] Copying without changes")
+            try:
+                shutil.copy2(input_path, output_path) # copy2 preserves timestamps automatically
+                return True
+            except Exception as e:
+                print(f"[!] Error copying reference file: {e}", file=sys.stderr)
+                return False
 
     if reference_path:
         ref_mean = get_image_mean_brightness(reference_path)
@@ -122,11 +138,6 @@ def main():
     total_files = len(valid_files)
     
     for idx, file_path in enumerate(valid_files, start=1):
-        # Skip the reference file if it is part of the selection
-        if ref_path and os.path.abspath(file_path) == os.path.abspath(ref_path):
-            total_files -= 1  # Adjust total count to keep percentages accurate
-            continue
-
         if output_dir:
             out_path = os.path.join(output_dir, os.path.basename(file_path))
         else:
@@ -139,4 +150,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

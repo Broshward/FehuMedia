@@ -1,3 +1,5 @@
+#!/usr/bin/lua
+
 usage=string.format([[This program splitting video or audio to files with duration.
 	usage: lua %s /path/to/file duration]],arg[0])
 

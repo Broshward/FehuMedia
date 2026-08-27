@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 #ffplay -fs -vf eq=saturation=2.5 178INTVL.mp4    Example of preview saturation change
 #ffmpeg -i INPUT.MOV -vf eq=saturation=2.5 -c:a copy OUTPUT.MOV   Example of reconvert saturation change
@@ -32,7 +32,7 @@ def _nextnum(inputname):
 def outvideoexists(outvideo):
     if os.path.exists(outvideo):
         if 'ans' not in globals():
-            print 'Output file "%s" is exist. Replace this?[y/N]: ' %(outvideo),
+            print('Output file "%s" is exist. Replace this?[y/N]: ' %(outvideo),end='',flush=True) 
             ans = sys.stdin.readline().strip()
         if ans=='' or ans=='N' or ans=='n':
             num=1
@@ -40,7 +40,7 @@ def outvideoexists(outvideo):
                 num+=1
             outvideo=outvideo.rsplit('.',1)[0]+'_%d.mp4' %(num)
         elif ans=='y' or ans=='Y':
-            print 'Overwriting file %s' %(outvideo)
+            print('Overwriting file %s' %(outvideo)) 
         else:
             outvideo = ans
 
@@ -66,7 +66,7 @@ if '-f' in sys.argv:
 
 if '--ask-difficult-questions' in sys.argv:
     sys.argv.pop(sys.argv.index('--ask-difficult-questions'))
-    print "Insert audio file to add for videeo [Output of sound card is default]: ",
+    print("Insert audio file to add for videeo [Output of sound card is default]: ",end='',flush=True) 
     audio_file = sys.stdin.readline().strip() 
     if '|' in audio_file:
         #import pdb;pdb.set_trace()
@@ -87,7 +87,7 @@ if '--not-replace' in sys.argv:
 files = sys.argv[1:]
 
 if 'replace' not in globals():
-    print 'Replace input file(s)? (N or additions for create a copy) [Y/n]: ',
+    print('Replace input file(s)? (N or additions for create a copy) [Y/n]: ',end='',flush=True) 
     ans = sys.stdin.readline().strip()
 elif replace:
     ans = 'y'
@@ -118,16 +118,16 @@ for i in files:
         if audio_file == '':
             cmd += audio_in + ' '  # Audio source is input  to add (Default)
         else:
-            cmd += "-stream_loop -1 -i %s " %(audio_file) # Audio file is input add
+            cmd += "-stream_loop -1 -i '%s' " %(audio_file) # Audio file is input add
     else:
-        cmd += audio_in + ' '  # Audio source is input add
+        cmd += audio_in+ + ' '  # Audio source is input add
 
     if mix:
         cmd += mixing_audio + ' '
     else:
         cmd += '-map 0:v -map 1:a '
     cmd += ' -c:v copy %s -y %s ' %(audio_out, outvideo)
-    print cmd
+    print (cmd)
     if os.system(cmd) != 0:
         exit(-127)
 
@@ -135,7 +135,7 @@ for i in files:
 
     if ans=='y' or ans=='Y' or ans=='':
         cmd = 'mv %s %s' %(outvideo,i) 
-        print cmd
+        print (cmd)
         os.system(cmd)
 
 if 'temp_audio' in globals():

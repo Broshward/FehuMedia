@@ -1,7 +1,7 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 #coding:utf8
 
-import sys,os,time,re
+import sys,os,time,re,subprocess
 
 usage='''
     usage: %s [-r] [-o filename] [--resolution Width:Height] [--temp-dir temp_dir] /photo/and/video/files&directories/for/creating
@@ -20,6 +20,20 @@ resolution_def = '-1:-1'
 images='jpg,png'
 videos='mov,mp4,mpg'
 
+def run_popen(command):
+    """
+    Идеальная замена os.popen().read() для Python 3.
+    Объединяет stdout и stderr, возвращая весь текст, независимо от ошибок.
+    """
+    res = subprocess.run(command, shell=True, capture_output=True, text=True)
+    # Объединяем вывод и ошибки, чтобы имитировать поведение реального терминала
+    return (res.stdout or "") + (res.stderr or "")
+
+def run_system(command):
+    """Замена os.system()"""
+    res = subprocess.run(command, shell=True)
+    return res.returncode
+
 def is_image(file):
     return file.rsplit('.',1)[1].lower() in images
 
@@ -29,7 +43,7 @@ def is_video(file):
 def _nextnum(inputname):
     try:outname=inputname.rsplit('.',1)
     except:
-        import pdb;pdb.set_trace()
+        breakpoint()
     if os.path.exists(outname[0]+'.'+outname[1]):
         num=1
         while os.path.exists(outname[0]+'_%d.%s' %(num,outname[1])):
@@ -43,7 +57,7 @@ def expand_dirs(files):
     i=0
     while i < len(files):
         if not os.path.exists(files[i]):
-            print '%s not found' %(files[i])
+            print('%s not found' %(files[i])) 
             exit(-3)
         elif os.path.isdir(files[i]):
             for j in os.listdir(files[i]):
@@ -58,7 +72,7 @@ def expand_dirs(files):
 if __name__=="__main__":
 
     if '--help' in sys.argv:
-        print usage
+        print(usage) 
         exit(0)
 
     if '--android_files' in sys.argv:
@@ -84,7 +98,7 @@ if __name__=="__main__":
         sys.argv.pop(sys.argv.index('-o')+1)
         sys.argv.pop(sys.argv.index('-o'))
         if not is_video(output_video):
-            print 'Output filename is not a video. Change this'
+            print('Output filename is not a video. Change this') 
             #import pdb;pdb.set_trace()
             exit(-10)
 
@@ -115,7 +129,7 @@ if __name__=="__main__":
         sys.argv.pop(sys.argv.index('--ask-difficult-questions'))
 
     if len(sys.argv)==1:
-        print '\nEmpty input files list !!!\n' 
+        print('\nEmpty input files list !!!\n' ) 
         exit(-4)
 #list_files=open('list_files','wt')
     list_names=sys.argv[1:]
@@ -125,7 +139,7 @@ if __name__=="__main__":
     files = []
 
     for i in list_names:
-        data=os.popen("ffprobe -v quiet -show_streams -select_streams v %s" %(i)).read()
+        data=run_popen("ffprobe -v quiet -show_streams -select_streams v %s" %(i))
         fps = eval(data.split('r_frame_rate=',1)[1].split('\n',1)[0]) # This have a bug from rounded integer divide ?????
         height=int(data.split('height=',1)[1].split('\n',1)[0])
         width=int(data.split('width=',1)[1].split('\n',1)[0])
@@ -140,7 +154,7 @@ if __name__=="__main__":
 
     if 'resolution' in globals(): 
         if resolution == 'ask':
-            print "Insert video resolution [%s]: " %(resolution_def),
+            print("Insert video resolution [%s]: " %(resolution_def),end='',flush=True) 
             resolution=sys.stdin.readline().strip()   
             if resolution=='':
                 resolution=resolution_def
@@ -165,7 +179,7 @@ if __name__=="__main__":
 
     if 'duration' in globals(): #
         if duration == 'ask':
-            print "Insert picture duration and interval in seconds [%s]: " %(duration_pause_def),
+            print("Insert picture duration and interval in seconds [%s]: " %(duration_pause_def),end='',flush=True) 
             duration=sys.stdin.readline().strip()   
             if duration == '':
                 duration=duration_pause_def
@@ -173,7 +187,7 @@ if __name__=="__main__":
 # List of audio
     for v in files:
         if is_video(v[1]):
-            if '#audio_only' in os.popen('get_comment %s' %(v[1])).read():
+            if '#audio_only' in run_popen('get_comment %s' %(v[1])):
                 if 'list_audio' not in globals():
                     list_audio = v[1]
                 else:
@@ -183,7 +197,7 @@ if __name__=="__main__":
         audio = temp_dir + 'audio.aac'
         audio = _nextnum(audio)
         cmd = 'concat_videos.py --audio-only -o %s ' %(audio)  +list_audio
-        os.system(cmd)
+        run_system(cmd)
         # Remove #audio_only files from file list
         i=0
         while i<len(files):
@@ -210,7 +224,7 @@ if __name__=="__main__":
             slide_temp = temp_dir+'temp/'
             if os.path.isdir(slide_temp):
                 if len(os.listdir(slide_temp)):
-                    print 'Directory %s not empty!' %(slide_temp)
+                    print('Directory %s not empty!' %(slide_temp)) 
                     exit(-10)
             else:
                 os.mkdir(slide_temp)
@@ -235,19 +249,19 @@ if __name__=="__main__":
                             cur_audio=v[1]
                             break
                 if 'cur_audio' not in globals(): # If nothing video or audio in files
-                    print "Insert audio file to add to video [None]: ",
+                    print("Insert audio file to add to video [None]: ",end='',flush=True) 
                     cur_audio = sys.stdin.readline().strip() 
                 if cur_audio != '':
                     cmd += ' -a %s ' %(cur_audio)
 
-            print '\n',cmd
-            if os.system(cmd):
+            print('\n',cmd) 
+            if run_system(cmd):
                 exit(-2)
 
             # Framerate slideshow to 30fps as default for framerate.py !!!!!  Need add -r option.
             #cmd = 'framerate.py --replace %s' %(outvideo)
-            #print '\n', cmd
-            #if os.system(cmd):
+            #print('\n', cmd) 
+            #if run_system(cmd):
             #    exit(-5)
         elif is_video(files[i][1]):
             if 'resolution' in globals():
@@ -255,7 +269,7 @@ if __name__=="__main__":
                     outvideo = temp_dir + files[i][1].rsplit('/',1)[1]
                     outvideo = _nextnum(outvideo)
                     cmd = 'scale.py -o %s --not-replace --resolution %s %s' %(outvideo, resolution,files[i][1])
-                    if os.system(cmd):
+                    if run_system(cmd):
                         exit(-6)
                     list_for_concat.append(outvideo)
                     temp_files.append(outvideo)
@@ -266,7 +280,7 @@ if __name__=="__main__":
             if repeat_audio:
                 cur_audio=files[i][1]
         else:
-            print 'Ignoring file: ',files[i][1]
+            print('Ignoring file: ',files[i][1]) 
             
         i+=1
 
@@ -275,18 +289,17 @@ if __name__=="__main__":
         output_video = files[0][1].rsplit('.',1)[0]+'_join.mp4' #Default output filename
     output_video = _nextnum(output_video)
 
-#import pdb;pdb.set_trace()
 # Concatenate parts
     cmd = 'concat_videos.py --crossing-add '
     cmd += '--temp-dir %s ' %(temp_dir)
     if sort == 'time':
         cmd += '--sort-time '
     cmd += '-o %s %s' %(output_video, ' '.join(list_for_concat))
-    print cmd
-    os.system(cmd)
+    print(cmd) 
+    run_system(cmd)
 
     if 'audio' in globals():
-        os.system('add_audio.py --not-replace --mix -f %s %s' %(audio,output_video))
+        run_system('add_audio.py --not-replace --mix -f %s %s' %(audio,output_video))
         os.remove(audio)
 
 # Remove temporarily files

@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 #coding:utf8
 
 fehu_home = '~/.fehumedia'
@@ -30,6 +30,8 @@ Options:
 
     pattern is regexp of searching file comment part.
 
+    The fehu.conf file must be existed and contain the mount_point="/path/to/mount/point" option for convenient usage.
+
 """
 
 
@@ -42,24 +44,38 @@ conf_file = fehu_home + '/fehu.conf'
 
 if os.path.exists(fehu_home):
     if not os.path.isdir(fehu_home):
-        print 'Cannot create %s. File exists!' %(fehu_home)
+        print('Cannot create %s. File exists!' %(fehu_home)) 
         exit(-1)
 else:
     os.mkdir(fehu_home)
 
+def run_popen(command):
+    """
+    Идеальная замена os.popen().read() для Python 3.
+    Объединяет stdout и stderr, возвращая весь текст, независимо от ошибок.
+    """
+    res = subprocess.run(command, shell=True, capture_output=True, text=True)
+    # Объединяем вывод и ошибки, чтобы имитировать поведение реального терминала
+    return (res.stdout or "") + (res.stderr or "")
+
+def run_system(command):
+    """Замена os.system()"""
+    res = subprocess.run(command, shell=True)
+    return res.returncode
+
 def gen_cache_string(filepath):
-    comment = os.popen('get_comment %s' %(filepath)).read()
+    comment = run_popen('get_comment %s' %(filepath))
     if comment!='':
         comment = comment.split(':',1)[1].strip()
     #if comment=='':
     #    continue
 
     if FileTime:
-        date = os.popen('get_date %s' %(filepath)).read().strip() # !Option: it for media time instead file time priority
+        date = run_popen('get_date %s' %(filepath)).strip() # !Option: it for media time instead file time priority
         if date=='-':
-            date = os.popen('date_of_file %s' %(filepath)).read().strip()
+            date = run_popen('date_of_file %s' %(filepath)).strip()
     else:
-        date = os.popen('date_of_file %s' %(filepath)).read().strip()
+        date = run_popen('date_of_file %s' %(filepath)).strip()
     
     return filepath+'\t'+date+'\t'+comment+'\n'
 
@@ -69,7 +85,7 @@ def replace_cache(files):
     cache = open(cache_file,'r').read()
     for filepath in files:
         if not os.path.exists(filepath):
-            print 'File %s not exists!' %(filepath)
+            print('File %s not exists!' %(filepath)) 
         if filepath+'\t' in cache:
             file_cache = cache[cache.find(filepath+'\t'):].split('\n',1)[0] + '\n'
             cache = cache.replace(file_cache, gen_cache_string(filepath))
@@ -107,7 +123,7 @@ def create_cache(New=False):
             continue
         try: dirs[i]=dirs[i].split('#')[0].strip() # The comment in delete
         except: None
-        print dirs[i]
+        print(dirs[i]) 
         if dirs[i]=='':
             i+=1 
             continue
@@ -122,7 +138,7 @@ def create_cache(New=False):
                 if os.path.isdir(filepath):
                     if recursive:
                         dirs.append(filepath+'/*')
-                        print filepath + ' is appended to dirs'
+                        print(filepath + ' is appended to dirs') 
                     continue 
 
                 if New == True:
@@ -131,18 +147,31 @@ def create_cache(New=False):
 
                 stringout = gen_cache_string(filepath)
                 if output == True:
-                    print stringout
+                    print(stringout) 
                 cache_file.write(stringout)
         else:
-            print dirs[i],' not found!'
+            print(dirs[i],' not found!') 
         i+=1 
 
     cache_file.close()
 
-def symlink_time_change(timestamp,symlink):
-    subprocess.call(['touch', '-h', '-t', timestamp, symlink])
-    #os.system('touch -h -r "'+file+'" '+ symlink) # %s" %(file,symlink))
-    #os.system('touch -h -t %s "%s"' %(filetime,symlink))
+def symlink_time_change(timestamp_str, symlink):
+    from datetime import datetime
+    """
+    Быстрая замена 'touch -h -t ...' средствами Python 3.
+    Ожидает timestamp_str в формате 'YYYYMMDDhhmm.ss' или 'YYYYMMDDhhmm'
+    """
+    # 1. Парсим строку времени (поддерживаем формат со секундами .ss и без)
+    if '.' in timestamp_str:
+        dt = datetime.strptime(timestamp_str, "%Y%m%d%H%M.%S")
+    else:
+        dt = datetime.strptime(timestamp_str, "%Y%m%d%H%M")
+        
+    # 2. Переводим в секунды (Unix Epoch)
+    epoch_time = dt.timestamp()
+    
+    # 3. Меняем время самого симлинка, не трогая целевой файл
+    os.utime(symlink, times=(epoch_time, epoch_time), follow_symlinks=False)
 
 def mount(mount_point,comments):
     import datetime,time
@@ -150,9 +179,12 @@ def mount(mount_point,comments):
         mount_point += '/'
     try:os.mkdir(mount_point)
     except:None
-    os.system("sudo umount %s" %(mount_point))
-    os.system("sudo mount -t tmpfs tmpfs %s;\
-               sudo chown %s:%s %s" %(mount_point,os.getlogin(),os.getlogin(),mount_point))
+    run_system("sudo umount %s" %(mount_point))
+    if 'mount point does not exist' in run_popen("sudo mount -t tmpfs tmpfs %s 2>&1" %(mount_point)):
+        print(mount_point.strip('/').strip('/'))
+        os.mkdir(mount_point)
+        run_system("sudo mount -t tmpfs tmpfs %s 2>&1" %(mount_point))
+    run_system("sudo chown %s:%s %s" %(os.getlogin(),os.getlogin(),mount_point))
     # Now mount_point is empty
 
     dates_dir = mount_point+'dates/'
@@ -166,8 +198,8 @@ def mount(mount_point,comments):
         strnum += 1 # String numbering begin with first (1) not 0.
         try:file,date,comment = i.split('\t',2)
         except:
-            print "You fehu.cache file damaged in string num <%d>!\n Try fehu.py -c" %(strnum)
-            print i
+            print("You fehu.cache file damaged in string num <%d>!\n Try fehu.py -c" %(strnum)) 
+            print(i) 
             exit(2)
         
         try:
@@ -293,7 +325,7 @@ if __name__=='__main__':
         FileTime = False
 
     if '-h' in sys.argv:
-        print help
+        print(help) 
         exit(0)
 
     if '-q' in sys.argv:
@@ -313,12 +345,13 @@ if __name__=='__main__':
             mount_point = open(conf_file,'r').read()
             mount_point = mount_point[mount_point.find('mount_point'):]
             if mount_point == None:
-                print 'File fehu.conf not contain the "mount_point" variable.'
+                print('File fehu.conf not contain the "mount_point" variable.') 
                 mount_point = '/tmp/fehumedia/'
             else:
-                mount_point = mount_point.split('=',1)[1].lstrip().split('\n')[0].rstrip()
+                mount_point = mount_point.split('=',1)[1].lstrip().split('\n')[0].rstrip().strip('"').strip("'")
         except:
-            print 'File fehu.conf not exists'
+            print('File fehu.conf not exists') 
+            exit(-323)
         
         mount_point=mount_point.replace('~',home)
 
@@ -354,12 +387,12 @@ if __name__=='__main__':
             size[0] = size[0][1:]
         try: size[0] = int(size[0])
         except:
-            print 'The size parameter must be [>|<|=](integer)[G|M|k]'
+            print('The size parameter must be [>|<|=](integer)[G|M|k]') 
             exit(3)
 
     try:comments = open(cache_file,'r').read()
     except:
-        print 'Cache of images files not exists! Try -c option!'
+        print('Cache of images files not exists! Try -c option!') 
         exit(1)
 
     if '-m' in sys.argv:
@@ -374,8 +407,4 @@ if __name__=='__main__':
     
     for i in comments.split('\n'):
         if pattern in i:
-            print i
-
-
-
-
+            print(i) 

@@ -21,10 +21,18 @@ def get_image_mean_brightness(image_path):
 def process_file(input_path, output_path, current_idx, total_files, reference_path=None):
     """
     Constructs the console command string and runs exposure adjustment.
-    Displays current progress in percent.
+    Displays current progress in percent. Fixes overwrite timestamp bug.
     """
     escaped_input = f'"{input_path}"'
     escaped_output = f'"{output_path}"'
+    
+    # Сразу сохраняем ОРИГИНАЛЬНОЕ время файла ДО запуска любых команд magick
+    try:
+        stat_info = os.stat(input_path)
+        orig_timestamps = (stat_info.st_atime, stat_info.st_mtime)
+    except Exception as e:
+        print(f"[!] Error reading original timestamps for {input_path}: {e}", file=sys.stderr)
+        return False
     
     # Calculate progress percentage
     progress = int((current_idx / total_files) * 100)
@@ -39,7 +47,7 @@ def process_file(input_path, output_path, current_idx, total_files, reference_pa
             # Subdirectory mode: safely copy the reference as-is to complete the batch
             print(f"-> {os.path.basename(input_path)} {progress_str}: [Reference file] Copying without changes")
             try:
-                shutil.copy2(input_path, output_path) # copy2 preserves timestamps automatically
+                shutil.copy2(input_path, output_path)
                 return True
             except Exception as e:
                 print(f"[!] Error copying reference file: {e}", file=sys.stderr)
@@ -67,9 +75,8 @@ def process_file(input_path, output_path, current_idx, total_files, reference_pa
     try:
         subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         
-        # Copy original modification and access timestamps to the new file
-        stat_info = os.stat(input_path)
-        os.utime(output_path, (stat_info.st_atime, stat_info.st_mtime))
+        # Применяем сохраненные заранее оригинальные метки времени к новому/перезаписанному файлу
+        os.utime(output_path, orig_timestamps)
         return True
     except subprocess.CalledProcessError as e:
         print(f"[!] Error processing {input_path}: {e.stderr.decode().strip()}", file=sys.stderr)
@@ -85,7 +92,7 @@ def main():
             "  1. Automatic: Stretches dynamic range and balances midtones automatically.\n"
             "  2. Reference Match: Calculates gamma correction based on a target reference image.\n\n"
             "Features:\n"
-            "  - Preserves original image timestamps (mtime/atime).\n"
+            "  - Preserves original image timestamps (mtime/atime) even during in-place overwrite.\n"
             "  - Prompts before overwriting, allowing saving to a dedicated subdirectory.\n"
             "  - Cleans up drag-and-dropped paths automatically."
         ),

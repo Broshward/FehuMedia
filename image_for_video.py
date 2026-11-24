@@ -21,9 +21,10 @@ usage: image_for_video.py [options] [ file1 file2 ... fileN ] [ dir1 dir2 ... di
 temporarydir='/tmp/temp'
 framerate_default = 10
 duration_pause_def = '2,1'
-resolution = '-2:1080'
-resolution = '1920:-2'
-resolution = '-2:2160'
+resolution = '-1:-1'
+#resolution = '-2:1080'
+#resolution = '1920:-2'
+#resolution = '-2:2160'
 
 if not temporarydir.endswith('/'):
     temporarydir += '/'
